@@ -163,15 +163,37 @@ body {
   transition: grid-template-columns 0.25s ease;
 }
 
+/* Desktop: collapse sidebar column smoothly */
 .app-body.sidebar-hidden {
-  grid-template-columns: 0 1fr;
+  grid-template-columns: 0px 1fr;
 }
-
 .app-body.sidebar-hidden .sidebar {
   overflow: hidden;
   padding: 0;
   border-right: none;
+  min-width: 0;
   width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Mobile: ALWAYS single column, sidebar always hidden via display:none in media query */
+@media (max-width: 768px) {
+  .app-body,
+  .app-body.sidebar-hidden {
+    display: block !important;
+    width: 100% !important;
+  }
+  .sidebar,
+  .app-body.sidebar-hidden .sidebar {
+    display: none !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+  .main {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
 .sidebar {
@@ -1110,10 +1132,7 @@ body {
   /* Hide sync button from header on mobile — moved to Datos tab */
   .header > div:last-child { display: none; }
 
-  /* App body — single column, no sidebar */
-  .app-body { grid-template-columns: 1fr; }
-  .sidebar { display: none; } /* replaced by bottom sheet */
-
+  /* App body — full width on mobile, sidebar handled above */
   .main { padding: 12px 12px 8px; }
 
   /* Section titles — tighter */
@@ -1232,8 +1251,8 @@ body {
   .fab { display: none !important; }
   .sheet-overlay { display: none !important; }
   .tickets-sheet { display: none !important; }
-  /* Sidebar visibility controlled by switchTab via .sidebar-hidden */
-  .app-body:not(.sidebar-hidden) .sidebar { display: block; }
+  /* Sidebar shown only on jugadas tab (controlled via .sidebar-hidden toggle in JS) */
+  .sidebar { display: block; }
 }
 
 /* TICKET VIRGINITY CHECK */
