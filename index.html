@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F9F8F6">
 <title>MelateX — Automatización Melate Retro</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
@@ -424,6 +428,8 @@ body {
   border: 1px solid var(--border2);
   position: relative;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .num-cell.layer-hidden {
@@ -571,50 +577,6 @@ body {
 }
 
 .health-feedback li.danger {
-  color: var(--red);
-}
-
-/* HYBRID LUCK CONFIG */
-.hybrid-config {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 16px;
-}
-
-.hybrid-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.hybrid-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.hybrid-opt {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  background: var(--bg4);
-  border: 1px solid var(--border);
-  color: var(--text3);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.hybrid-opt.active {
-  background: rgba(232,0,29,0.15);
-  border-color: var(--red);
   color: var(--red);
 }
 
@@ -941,30 +903,323 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .app-body { grid-template-columns: 1fr; }
-  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-  .analysis-grid { grid-template-columns: 1fr; }
-  .number-grid { grid-template-columns: repeat(10, 1fr); }
-  .pos-prob-grid { grid-template-columns: repeat(3, 1fr); }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-}
-
 /* KONFETTI EFFECT */
 @keyframes konfetti {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(-60px) rotate(360deg); opacity: 0; }
 }
-
 .konfetti-piece {
+  position: fixed; width: 6px; height: 6px; border-radius: 1px;
+  pointer-events: none; animation: konfetti 0.8s ease-out forwards; z-index: 9999;
+}
+
+/* ══════════════════════════════════════════════
+   BOTTOM NAV BAR (mobile)
+══════════════════════════════════════════════ */
+.bottom-nav {
+  display: none;
   position: fixed;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
-  pointer-events: none;
-  animation: konfetti 0.8s ease-out forwards;
-  z-index: 9999;
+  bottom: 0; left: 0; right: 0;
+  height: auto;
+  min-height: 60px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  z-index: 150;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+}
+.bottom-nav-inner {
+  display: flex;
+  height: 60px;
+  padding: 0 4px;
+}
+.bn-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.18s;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  padding: 6px 2px;
+  min-width: 0;
+}
+.bn-tab.active { color: var(--red); }
+.bn-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: var(--red);
+  border-radius: 0 0 3px 3px;
+}
+.bn-icon { font-size: 22px; line-height: 1; display: block; }
+.bn-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 4px;
+}
+.bn-badge {
+  position: absolute; top: 4px; right: calc(50% - 20px);
+  background: var(--red); color: white;
+  font-size: 8px; min-width: 15px; height: 15px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; padding: 0 3px;
+  border: 1.5px solid var(--bg2);
+}
+
+/* ══════════════════════════════════════════════
+   TICKETS BOTTOM SHEET (mobile)
+══════════════════════════════════════════════ */
+.sheet-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,26,46,0.45);
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.sheet-overlay.open { display: block; }
+
+.tickets-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  z-index: 210;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tickets-sheet.open { transform: translateY(0); }
+
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sheet-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: 2px; color: var(--text2);
+}
+.sheet-close {
+  background: var(--bg3); border: none; border-radius: 50%;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text3); font-size: 14px;
+}
+.sheet-body { overflow-y: auto; padding: 12px 16px; flex: 1; }
+
+/* FAB — floating tickets button */
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 72px; right: 16px;
+  width: 52px; height: 52px;
+  background: var(--red);
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 140;
+  box-shadow: 0 4px 16px rgba(232,0,29,0.4);
+  align-items: center; justify-content: center;
+  transition: transform 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: scale(0.92); }
+.fab-badge {
+  position: absolute; top: -3px; right: -3px;
+  background: var(--text); color: var(--bg2);
+  font-size: 9px; min-width: 16px; height: 16px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  border: 2px solid var(--bg2);
+}
+
+/* ══════════════════════════════════════════════
+   MOBILE LAYOUT OVERRIDES  (≤ 768px)
+══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Smooth scrolling & safe area */
+  html { scroll-behavior: smooth; }
+  body {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide desktop top-nav, show bottom-nav */
+  .nav { display: none; }
+  .bottom-nav { display: flex; }
+  .fab { display: flex; }
+
+  /* Header — compact single row */
+  .header {
+    height: 52px;
+    padding: 0 14px;
+    gap: 8px;
+  }
+  .logo { font-size: 22px; letter-spacing: 2px; }
+  .logo-badge { font-size: 8px; padding: 1px 5px; }
+  .jackpot-label { display: none; }
+  .jackpot-badge {
+    padding: 4px 10px;
+    gap: 4px;
+  }
+  #jackpotValue { font-size: 14px !important; }
+  .sort-info { font-size: 10px; }
+  /* Hide sync button from header on mobile — moved to Datos tab */
+  .header > div:last-child { display: none; }
+
+  /* App body — single column, no sidebar */
+  .app-body { grid-template-columns: 1fr; }
+  .sidebar { display: none; } /* replaced by bottom sheet */
+
+  .main { padding: 12px 12px 8px; }
+
+  /* Section titles — tighter */
+  .section-title { font-size: 13px; margin-bottom: 8px; }
+
+  /* Sequential assistant — compact */
+  .seq-assist {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    min-height: unset;
+  }
+  .seq-title { font-size: 10px; margin-bottom: 4px; }
+  .seq-hint { font-size: 11px; }
+
+  /* Grid controls row */
+  .grid-title-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .btn-group { width: 100%; justify-content: stretch; }
+  .btn-group button { flex: 1; padding: 10px 6px; font-size: 12px; }
+
+  /* Health bar */
+  .health-container { margin-bottom: 10px; }
+  .health-feedback { font-size: 10px; }
+
+  /* Selection display */
+  .selection-info {
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .sel-num-pill, .sel-empty { width: 28px; height: 28px; font-size: 13px; }
+  .sel-count { font-size: 24px; }
+
+  /* ── NUMBER GRID — 8 columns, larger tap targets ── */
+  .number-grid {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+  .num-cell {
+    font-size: 14px;
+    border-radius: 9px;
+    min-height: 38px;
+  }
+  /* Bigger tap area via padding-based height */
+  .num-cell { aspect-ratio: unset; height: 40px; }
+
+  /* Filters bar — horizontal scroll */
+  .filters-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    gap: 5px;
+    margin-bottom: 10px;
+    scrollbar-width: none;
+  }
+  .filters-bar::-webkit-scrollbar { display: none; }
+  .filter-btn { flex-shrink: 0; padding: 5px 11px; font-size: 10px; }
+
+  /* Legend — hide on mobile (redundant with visual cells) */
+  .filter-legend { display: none; }
+
+  /* Analysis grid */
+  .analysis-grid { grid-template-columns: 1fr; gap: 10px; }
+  .analysis-card { padding: 12px; }
+
+  /* Position probability */
+  .pos-prob-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+  /* History table — scrollable */
+  .history-table { font-size: 10px; }
+  .history-table th, .history-table td { padding: 5px 6px; }
+
+  /* Stats row */
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-value { font-size: 18px; }
+
+  /* Buttons */
+  .btn-primary, .btn-secondary {
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  /* Ticket cards inside sheet */
+  .ticket-card { padding: 10px; }
+  .ticket-num { width: 26px; height: 26px; font-size: 12px; }
+
+  /* Data tab — textarea */
+  #manualDataInput { height: 140px; font-size: 11px; }
+
+  /* Directionality table */
+  #directionalityTable { overflow-x: auto; }
+  #directionalityTable table { min-width: 500px; }
+}
+
+/* ══════════════════════════════════════════════
+   TABLET  (769 – 900px)
+══════════════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 900px) {
+  .app-body { grid-template-columns: 260px 1fr; }
+  .number-grid { grid-template-columns: repeat(10, 1fr); }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .pos-prob-grid { grid-template-columns: repeat(3, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ══════════════════════════════════════════════
+   DESKTOP  (> 900px) — sidebar always visible
+══════════════════════════════════════════════ */
+@media (min-width: 901px) {
+  .bottom-nav { display: none !important; }
+  .fab { display: none !important; }
+  .sheet-overlay { display: none !important; }
+  .tickets-sheet { display: none !important; }
+  .sidebar { display: block !important; }
 }
 </style>
 </head>
@@ -1023,21 +1278,6 @@ body {
       + Nuevo Boleto
     </button>
 
-    <!-- HYBRID LUCK -->
-    <div class="hybrid-config" style="margin-bottom:16px;">
-      <div class="hybrid-title">🎲 Hybrid Luck — Azar Controlado</div>
-      <div class="hybrid-options">
-        <div class="hybrid-opt active" data-rule="pool" onclick="toggleRule(this)">Solo Pool</div>
-        <div class="hybrid-opt" data-rule="consecutivos" onclick="toggleRule(this)">Consecutivos</div>
-        <div class="hybrid-opt" data-rule="vecinos" onclick="toggleRule(this)">Vecinos</div>
-        <div class="hybrid-opt" data-rule="terminacion" onclick="toggleRule(this)">Misma Terminación</div>
-        <div class="hybrid-opt" data-rule="heredados" onclick="toggleRule(this)">Heredados</div>
-        <div class="hybrid-opt" data-rule="frios" onclick="toggleRule(this)">Fríos</div>
-        <div class="hybrid-opt" data-rule="calientes" onclick="toggleRule(this)">Calientes</div>
-        <div class="hybrid-opt" data-rule="super_randomize" onclick="toggleRule(this)">✨ Súper Randomize</div>
-      </div>
-    </div>
-
     <!-- STATS -->
     <div style="margin-top:16px;">
       <div class="section-title" style="font-size:12px;">Resumen</div>
@@ -1072,7 +1312,7 @@ body {
         <div class="section-title">Cuadrícula 1–39</div>
         <div class="btn-group">
           <button class="btn-secondary" onclick="clearSelection()">✕ Limpiar</button>
-          <button class="btn-primary" onclick="randomize()">🎲 Randomize</button>
+          <button class="btn-primary" onclick="randomize()">⚡ Randomize</button>
           <button class="btn-primary" id="btnSave" onclick="saveSelection()" style="background:var(--green-dark);">✓ Guardar</button>
         </div>
       </div>
@@ -1378,7 +1618,6 @@ let tickets = [];
 let activeTicket = null;
 let currentSelection = []; // Números seleccionados actualmente en la cuadrícula
 let activeFilters = new Set(['all']); // Filtros visuales activos en la cuadrícula (ahora un Set)
-let activeRules = new Set(['pool']);
 let activeLayers = new Set(['temp']); // Solo indicadores básicos al inicio
 let focusedNum = null;
 
@@ -1530,12 +1769,13 @@ function clearSavedData() {
 }
 
 function updateSourceBadge(isReal, sorteoId = null) {
+  const html = isReal
+    ? `<span style="color:var(--green)">● Datos Reales (Sorteo #${sorteoId})</span>`
+    : `<span style="color:var(--red)">○ Modo Simulación (Sin Datos)</span>`;
   const el = document.getElementById('dataSourceBadge');
-  if (isReal) {
-    el.innerHTML = `<span style="color:var(--green)">● Datos Reales (Sorteo #${sorteoId})</span>`;
-  } else {
-    el.innerHTML = `<span style="color:var(--red)">○ Modo Simulación (Sin Datos)</span>`;
-  }
+  if (el) el.innerHTML = html;
+  const sheetBadge = document.getElementById('sheetDataBadge');
+  if (sheetBadge) sheetBadge.innerHTML = html;
 }
 
 // ============================================================
@@ -1845,66 +2085,33 @@ function updateSeqAssistant() {
 // ============================================================
 
 function randomize() {
-  const rules = [...activeRules];
-  let pool = [];
-
-  // Build candidate pool based on rules
-  if(rules.includes('pool')) {
-    pool = [...POOL];
-  } else {
-    pool = Array.from({length:39}, (_,i) => i+1);
+  // Súper Randomize: 4 de la Intersección Crítica + 2 del Pool de alta frecuencia
+  if (HISTORY.length === 0) {
+    showNotif('⚠ Importa datos reales para activar el Súper Randomize.', 'error');
+    return;
+  }
+  if (CRITICAL_PARTNERS.size < 4) {
+    showNotif(
+      `Intersección Crítica insuficiente: ${CRITICAL_PARTNERS.size} números (mínimo 4). Verifica datos de Sorteo Inmediato y de Lote.`,
+      'error'
+    );
+    return;
   }
 
-  if(rules.includes('calientes')) {
-    pool = pool.filter(n => HOT.has(n));
-    if(pool.length < 6) pool = [...HOT];
-  }
+  // 1. Exactamente 4 de la Intersección Crítica (Herencia Dual)
+  const criticalSelection = pickRandom([...CRITICAL_PARTNERS], 4);
 
-  if(rules.includes('frios')) {
-    pool = [...COLD];
-  }
+  // 2. Completar con 2 del Pool de alta frecuencia
+  const poolCandidates = POOL.size >= 2
+    ? [...POOL].filter(n => !criticalSelection.includes(n))
+    : Array.from({length: 39}, (_, i) => i + 1).filter(n => !criticalSelection.includes(n));
 
-  if(rules.includes('heredados')) {
-    pool = pool.filter(n => INHERITED.has(n));
-    if(pool.length < 6) pool = [...INHERITED];
-  }
+  const complement = pickRandom(poolCandidates, 2);
+  currentSelection = [...criticalSelection, ...complement].sort((a, b) => a - b);
 
-  if(rules.includes('primos')) {
-    pool = pool.filter(n => PRIMES.has(n));
-  }
-
-  // Ensure enough candidates
-  if(pool.length < 6) {
-    pool = Array.from({length:39}, (_,i) => i+1);
-  }
-
-  // Shuffle and pick 6
-  let result = [];
-
-  if(rules.includes('consecutivos')) {
-    const start = pool[Math.floor(Math.random() * (pool.length - 5))];
-    result = [start, start+1, start+2, start+3, start+4, start+5].filter(n => n <= 39);
-    if(result.length < 6) result = pickRandom(pool, 6);
-  } else if(rules.includes('terminacion')) {
-    const term = Math.floor(Math.random() * 10);
-    const termPool = pool.filter(n => n % 10 === term);
-    result = termPool.length >= 3 ? pickRandom(termPool, Math.min(3, termPool.length)) : [];
-    const rest = pool.filter(n => !result.includes(n));
-    result = [...result, ...pickRandom(rest, 6 - result.length)];
-  } else if(rules.includes('vecinos')) {
-    const anchor = pool[Math.floor(Math.random() * pool.length)];
-    const neighbors = [anchor-2,anchor-1,anchor,anchor+1,anchor+2].filter(n => n>=1 && n<=39);
-    result = pickRandom(neighbors, Math.min(3, neighbors.length));
-    const rest = pool.filter(n => !result.includes(n));
-    result = [...result, ...pickRandom(rest, 6 - result.length)];
-  } else {
-    result = pickRandom(pool, 6);
-  }
-
-  currentSelection = result.sort((a,b)=>a-b);
   renderGrid();
   updateHealth();
-  showNotif('🎲 Combinación generada con Hybrid Luck', 'success');
+  showNotif(`⚡ Súper Randomize: 4 Intersección Crítica + 2 Pool`, 'success');
 }
 
 function pickRandom(arr, n) {
@@ -2027,6 +2234,12 @@ function updateStats() {
   const complete = tickets.filter(t => t.nums.length === 6).length;
   document.getElementById('statTotal').textContent = tickets.length;
   document.getElementById('statComplete').textContent = complete;
+  // Sync mobile sheet stats + FAB badge
+  const sheetTotal = document.getElementById('sheetStatTotal');
+  const sheetDone  = document.getElementById('sheetStatDone');
+  if (sheetTotal) sheetTotal.textContent = tickets.length;
+  if (sheetDone)  sheetDone.textContent  = complete;
+  if (typeof updateFabBadge === 'function') updateFabBadge();
 }
 
 function updateJackpotUI() {
@@ -2090,16 +2303,7 @@ function setFilter(btn, filter) {
   renderGrid();
 }
 
-function toggleRule(el) {
-  const rule = el.dataset.rule;
-  if(activeRules.has(rule)) {
-    activeRules.delete(rule);
-    el.classList.remove('active');
-  } else {
-    activeRules.add(rule);
-    el.classList.add('active');
-  }
-}
+// toggleRule removed — Hybrid Luck UI eliminated
 
 // ============================================================
 // TABS
@@ -2307,6 +2511,191 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('Error al registrar SW', err));
   });
 }
+
+
+// ════════════════════════════════════════════
+// MOBILE HELPERS
+// ════════════════════════════════════════════
+
+function isMobile() { return window.innerWidth <= 768; }
+
+// ── Bottom nav tab switch ──────────────────
+function mobileTab(id) {
+  // Reuse existing switchTab but also update bottom nav
+  switchTab(id);
+  document.querySelectorAll('.bn-tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('bnt-' + id);
+  if (btn) btn.classList.add('active');
+}
+
+// ── Tickets bottom sheet ───────────────────
+function openSheet() {
+  renderSheetTickets();
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('ticketsSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('ticketsSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderSheetTickets() {
+  const list = document.getElementById('sheetTicketsList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  tickets.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'ticket-card' + (t.id === activeTicket?.id ? ' active' : '');
+    card.onclick = () => { selectTicket(t.id); closeSheet(); };
+
+    card.innerHTML = `
+      <div class="ticket-header">
+        <span class="ticket-name">${t.name}</span>
+        <div class="ticket-actions">
+          <button class="btn-icon" onclick="event.stopPropagation(); renameTicket(${t.id})">✏</button>
+          <button class="btn-icon del" onclick="event.stopPropagation(); deleteTicket(${t.id}); renderSheetTickets();">✕</button>
+        </div>
+      </div>
+      <div class="ticket-numbers">
+        ${Array.from({length:6}, (_,i) => `
+          <div class="ticket-num ${t.nums[i] ? 'filled' : 'empty'}">
+            ${t.nums[i] || '—'}
+          </div>
+        `).join('')}
+      </div>
+      <div class="ticket-status">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div class="status-dot ${t.nums.length === 6 ? 'active' : ''}"></div>
+          <span class="status-label">${t.nums.length}/6 números</span>
+        </div>
+        <span style="font-size:9px;color:var(--text3)">
+          ${t.nums.filter(n => PRIMES.has(n)).length}P | ${t.nums.filter(n => POOL.has(n)).length}V
+        </span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  // Update sheet stats
+  const done = tickets.filter(t => t.nums.length === 6).length;
+  const stTotal = document.getElementById('sheetStatTotal');
+  const stDone  = document.getElementById('sheetStatDone');
+  if (stTotal) stTotal.textContent = tickets.length;
+  if (stDone)  stDone.textContent  = done;
+
+  // Mirror data source badge
+  const srcBadge = document.getElementById('dataSourceBadge');
+  const sheetBadge = document.getElementById('sheetDataBadge');
+  if (srcBadge && sheetBadge) sheetBadge.innerHTML = srcBadge.innerHTML;
+}
+
+// ── Update FAB badge whenever tickets change ──
+function updateFabBadge() {
+  const badge = document.getElementById('fabBadge');
+  const mnBadge = document.getElementById('mbn-badge');
+  if (badge)   badge.textContent   = tickets.length;
+  if (mnBadge) mnBadge.textContent = tickets.length;
+}
+
+// ── Touch swipe to close sheet ────────────────
+(function() {
+  let startY = 0;
+  document.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const sheet = document.getElementById('ticketsSheet');
+    if (!sheet.classList.contains('open')) return;
+    const diff = e.changedTouches[0].clientY - startY;
+    if (diff > 80) closeSheet(); // swipe down >80px to close
+  }, { passive: true });
+})();
+
+// ── Patch addTicket & deleteTicket to also update FAB ──
+const _origAddTicket = addTicket;
+addTicket = function() {
+  _origAddTicket.apply(this, arguments);
+  updateFabBadge();
+};
+const _origDeleteTicket = deleteTicket;
+deleteTicket = function() {
+  _origDeleteTicket.apply(this, arguments);
+  updateFabBadge();
+};
+
+// ── On init, trigger FAB badge update ──
+window.addEventListener('DOMContentLoaded', () => {
+  updateFabBadge();
+});
+
 </script>
+
+<!-- ════ BOTTOM NAV (mobile) ════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-inner">
+    <button class="bn-tab active" id="bnt-jugadas" onclick="mobileTab('jugadas')" aria-label="Jugadas">
+      <span class="bn-icon">⚡</span>
+      <span class="bn-label">Jugadas</span>
+      <span class="bn-badge" id="mbn-badge">0</span>
+    </button>
+    <button class="bn-tab" id="bnt-analisis" onclick="mobileTab('analisis')" aria-label="Análisis">
+      <span class="bn-icon">📊</span>
+      <span class="bn-label">Análisis</span>
+    </button>
+    <button class="bn-tab" id="bnt-historial" onclick="mobileTab('historial')" aria-label="Historial">
+      <span class="bn-icon">📋</span>
+      <span class="bn-label">Historial</span>
+    </button>
+    <button class="bn-tab" id="bnt-datos" onclick="mobileTab('datos')" aria-label="Datos">
+      <span class="bn-icon">⚙️</span>
+      <span class="bn-label">Datos</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ════ FAB — open tickets sheet ════ -->
+<button class="fab" id="fabBtn" onclick="openSheet()" aria-label="Mis boletos">
+  🎟
+  <span class="fab-badge" id="fabBadge">0</span>
+</button>
+
+<!-- ════ SHEET OVERLAY ════ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+<!-- ════ TICKETS BOTTOM SHEET ════ -->
+<div class="tickets-sheet" id="ticketsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">Mis Boletos</span>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <!-- Tickets list mirrors the sidebar -->
+    <div id="sheetTicketsList"></div>
+    <button class="btn-add-ticket" onclick="addTicket(); closeSheet();" style="margin-top:10px;">
+      + Nuevo Boleto
+    </button>
+    <div style="margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+      <div class="stat-box">
+        <div class="stat-value" id="sheetStatTotal">0</div>
+        <div class="stat-label">Boletos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="sheetStatDone">0</div>
+        <div class="stat-label">Listos</div>
+      </div>
+    </div>
+    <!-- Mobile sync button in sheet -->
+    <button class="btn-primary" style="width:100%;margin-top:12px;justify-content:center;" onclick="syncData()">
+      🔄 Sincronizar Datos
+    </button>
+    <div id="sheetDataBadge" style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);text-align:center;margin-top:6px;"></div>
+  </div>
+</div>
+
 </body>
 </html>
