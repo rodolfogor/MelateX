@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MelateX — Automatización Melate Retro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --red: #E8001D;
+  --red-dark: #B0001A;
+  --red-light: #FF1A35;
+  --red-glow: rgba(232,0,29,0.15);
+  --orange: #F59E0B;
+  --gold: #FFB800;
+  --green: #00C853; /* Esmeralda */
+  --green-dark: #00963D;
+  --bg: #F2F0EB;         /* Greige base para el fondo */
+  --bg2: #F9F8F6;        /* Greige muy claro para tarjetas y superficies */
+  --bg3: #EBE9E4;        /* Tono medio para elementos secundarios */
+  --bg4: #E2E0D9;        /* Tono más profundo para estados inactivos */
+  --border: rgba(60, 60, 50, 0.1);
+  --border2: rgba(60, 60, 50, 0.15);
+  --text: #1A1A2E;
+  --text2: #525266;
+  --text3: #828291;
+  --prime-color: #FF6B00;
+  --composite-color: #4A9EFF;
+  --pool-color: #00C853;
+  --hot-color: #FF4444;
+  --cold-color: #4A9EFF;
+  --selected-color: #E8001D;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--red); border-radius: 2px; }
+
+/* HEADER */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo span { color: var(--red); font-weight: 800; }
+
+.logo-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  background: var(--red);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.jackpot-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+.jackpot-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sort-info {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: right;
+  line-height: 1.4;
+}
+
+/* NAV TABS */
+.nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+}
+
+.nav-tab {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--text); border-bottom-color: var(--red); }
+
+.tab-count {
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* LAYOUT */
+.app-body {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 100px);
+}
+
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.main {
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* SECTION TITLES */
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  color: var(--text2);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--red);
+  border-radius: 2px;
+}
+
+/* TICKET CARDS */
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.ticket-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.ticket-card:hover { border-color: var(--border2); }
+.ticket-card.active { border-color: var(--red); background: rgba(232,0,29,0.06); }
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ticket-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.btn-icon:hover { background: var(--bg4); color: var(--text); }
+.btn-icon.del:hover { color: var(--red); }
+
+.ticket-numbers {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ticket-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+
+.ticket-num.filled {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
+}
+
+.ticket-num.empty {
+  border-style: dashed;
+  border-color: var(--border2);
+  color: var(--text3);
+}
+
+.ticket-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+
+.status-dot.active { background: var(--green); box-shadow: 0 0 4px var(--green); }
+
+.status-label {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.cost-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--gold);
+}
+
+/* ADD TICKET BTN */
+.btn-add-ticket {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  padding: 10px;
+  color: var(--text3);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-add-ticket:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-glow);
+}
+
+/* MAIN GRID AREA */
+.grid-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover { background: var(--red-light); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover { border-color: var(--red); color: var(--red); }
+
+.btn-group { display: flex; gap: 8px; }
+
+/* FILTER LEGEND */
+.filter-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+/* NUMBER GRID */
+.number-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 5px;
+  margin-bottom: 20px;
+}
+
+.num-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--bg2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+  position: relative;
+  user-select: none;
+}
+
+.num-cell.layer-hidden {
+  opacity: 0.15;
+}
+
+.num-cell:hover { transform: scale(1.08); border-color: var(--red); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+/* NUEVOS INDICADORES VISUALES */
+
+/* Primos: Punto anaranjado superior izquierdo */
+.num-cell.prime::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--orange);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* Calientes y Fríos: Emojis en la esquina inferior derecha */
+.num-cell.hot::after {
+  content: '🔥';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+}
+
+.num-cell.cold::after {
+  content: '❄️';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+}
+
+/* Pool Activo: Fondo verde y números verdes */
+.num-cell.pool {
+  background: rgba(0, 200, 83, 0.15) !important;
+  color: var(--green) !important;
+  border: 3px solid var(--green) !important;
+}
+
+.num-cell.selected {
+  background: var(--red) !important;
+  color: white !important;
+  border: 3px solid var(--red) !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(232,0,29,0.4);
+}
+
+.num-cell.composite {
+  background: var(--bg2);
+}
+
+.num-cell.hot {
+  /* Estilo manejado por ::after */
+}
+
+.num-cell.cold {
+  border: 1px solid var(--border2);
+  color: var(--text2) !important;
+}
+
+/* REGLAS DE HERENCIA (Definidas al final para ganar prioridad de borde) */
+
+/* Herencia Natural: Borde Rosa Chicle */
+.num-cell.natural-heritance {
+  border: 3px solid #F27798 !important;
+  color: #F27798 !important;
+}
+
+/* Socios (Vecinos): Marco Azul */
+.num-cell.partner-heritance {
+  border: 3px solid #4A9EFF !important;
+}
+
+/* Prioridad para Fríos que son Socios (Mantiene el copo pero recupera el borde azul) */
+.num-cell.cold.partner-heritance {
+  border: 3px solid #4A9EFF !important;
+}
+
+.num-cell.suggested {
+  animation: pulse-suggest 1s infinite;
+  border: 3px solid var(--gold) !important;
+}
+
+@keyframes pulse-suggest {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,184,0,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(255,184,0,0); }
+}
+
+/* FILTERS BAR */
+.filters-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text3);
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-btn:hover { color: var(--text2); border-color: var(--border2); }
+.filter-btn.active { background: var(--red); border-color: var(--red); color: white; }
+
+/* HEALTH BAR */
+.health-container { margin-bottom: 12px; }
+.health-label { font-size: 10px; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.health-bar-bg { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.health-bar-fill { height: 100%; width: 0%; background: var(--green); transition: width 0.3s, background 0.3s; }
+.health-warning { background: var(--red) !important; }
+.health-optimal { background: var(--green) !important; box-shadow: 0 0 8px var(--green); }
+
+.health-feedback {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.health-feedback ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 4px;
+}
+
+.health-feedback li.warning {
+  color: var(--gold);
+}
+
+.health-feedback li.danger {
+  color: var(--red);
+}
+
+/* HYBRID LUCK CONFIG */
+.hybrid-config {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.hybrid-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hybrid-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hybrid-opt {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.hybrid-opt.active {
+  background: rgba(232,0,29,0.15);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* SELECTION INFO */
+.selection-info {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sel-numbers {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.sel-num-pill {
+  background: var(--red);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sel-empty {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--text3);
+}
+
+.sel-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.sel-count-label {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ANALYSIS TAB */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.analysis-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.analysis-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.position-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pos-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pos-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.pos-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--bg4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pos-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--red);
+  transition: width 0.3s;
+}
+
+.pos-nums {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text3);
+  width: 60px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* HISTORY TABLE */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--text3);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+}
+
+.history-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: var(--bg4); }
+
+.hist-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  font-size: 12px;
+  margin: 0 1px;
+}
+
+/* POSITION PROB */
+.pos-prob-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.pos-col {
+  background: var(--bg4);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.pos-col-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--red);
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.pos-col-nums {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pos-col-num {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.pos-col-num.rank1 { background: rgba(232,0,29,0.2); color: #FF6B6B; }
+.pos-col-num.rank2 { background: rgba(255,184,0,0.1); color: var(--gold); }
+.pos-col-num.rank3 { background: rgba(0,200,83,0.1); color: var(--green); }
+
+.pos-col-pct {
+  color: var(--text3);
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* NOTIFICATIONS */
+.notif-box {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.notif {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text);
+  max-width: 280px;
+  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+  pointer-events: all;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+.notif.success { border-left: 3px solid var(--green); }
+.notif.warning { border-left: 3px solid var(--gold); }
+.notif.error { border-left: 3px solid var(--red); }
+.notif.info { border-left: 3px solid #4A9EFF; }
+
+/* SEQUENTIAL ASSISTANT */
+.seq-assist {
+  background: linear-gradient(135deg, rgba(232,0,29,0.08), rgba(255,107,0,0.05));
+  border: 1px solid rgba(232,0,29,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+  min-height: 110px; /* Asegura que el contenedor tenga espacio suficiente para el mensaje más largo */
+}
+
+.seq-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.seq-hint {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.seq-range-alert {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* TABS CONTENT */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* STATS ROW */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .app-body { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .number-grid { grid-template-columns: repeat(10, 1fr); }
+  .pos-prob-grid { grid-template-columns: repeat(3, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* KONFETTI EFFECT */
+@keyframes konfetti {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-60px) rotate(360deg); opacity: 0; }
+}
+
+.konfetti-piece {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  pointer-events: none;
+  animation: konfetti 0.8s ease-out forwards;
+  z-index: 9999;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    MELATE<span>X</span>
+    <span class="logo-badge">RETRO 39</span>
+  </div>
+  <div class="header-right">
+    <div class="jackpot-badge" id="jackpotBadge">
+      <span class="jackpot-label">Bolsa Garantizada</span>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:600; color:var(--red)" id="jackpotValue">$ 0</div>
+    </div>
+    <div class="sort-info">
+      <div style="font-size:11px;color:var(--text3)">Próximo sorteo</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace" id="nextDraw">—</div>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; margin-left:20px;">
+    <button class="btn-primary" style="font-size:11px; padding:6px 12px; background:var(--bg3); border:1px solid var(--border2)" onclick="syncData()">
+      🔄 Sincronizar Datos
+    </button>
+    <div id="dataSourceBadge" style="font-size:9px; font-family:'JetBrains Mono',monospace; color:var(--text3)">Estado: Pendiente</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-tab active" onclick="switchTab('jugadas')" id="tab-jugadas">
+    ⚡ Jugadas <span class="tab-count" id="tc-jugadas">0</span>
+  </div>
+  <div class="nav-tab" onclick="switchTab('analisis')" id="tab-analisis">
+    📊 Análisis Profundo
+  </div>
+  <div class="nav-tab" onclick="switchTab('historial')" id="tab-historial">
+    📋 Historial
+  </div>
+  <div class="nav-tab" onclick="switchTab('datos')" id="tab-datos">
+    ⚙️ Gestor de Datos
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="section-title">Mis Boletos</div>
+
+    <div class="tickets-list" id="ticketsList"></div>
+
+    <button class="btn-add-ticket" onclick="addTicket()" style="margin-bottom: 16px;">
+      + Nuevo Boleto
+    </button>
+
+    <!-- HYBRID LUCK -->
+    <div class="hybrid-config" style="margin-bottom:16px;">
+      <div class="hybrid-title">🎲 Hybrid Luck — Azar Controlado</div>
+      <div class="hybrid-options">
+        <div class="hybrid-opt active" data-rule="pool" onclick="toggleRule(this)">Solo Pool</div>
+        <div class="hybrid-opt" data-rule="consecutivos" onclick="toggleRule(this)">Consecutivos</div>
+        <div class="hybrid-opt" data-rule="vecinos" onclick="toggleRule(this)">Vecinos</div>
+        <div class="hybrid-opt" data-rule="terminacion" onclick="toggleRule(this)">Misma Terminación</div>
+        <div class="hybrid-opt" data-rule="heredados" onclick="toggleRule(this)">Heredados</div>
+        <div class="hybrid-opt" data-rule="frios" onclick="toggleRule(this)">Fríos</div>
+        <div class="hybrid-opt" data-rule="calientes" onclick="toggleRule(this)">Calientes</div>
+        <div class="hybrid-opt" data-rule="super_randomize" onclick="toggleRule(this)">✨ Súper Randomize</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div style="margin-top:16px;">
+      <div class="section-title" style="font-size:12px;">Resumen</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <div class="stat-box">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Boletos</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statComplete">0</div>
+          <div class="stat-label">Listos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- TAB: JUGADAS -->
+    <div class="tab-content active" id="content-jugadas">
+
+      <!-- SEQUENTIAL ASSISTANT -->
+      <div class="seq-assist" id="seqAssist">
+        <div class="seq-title">⚡ Asistente Secuencial</div>
+        <div class="seq-hint" id="seqHint">Selecciona el primer número para activar las sugerencias inteligentes de secuencia.</div>
+        <div class="seq-range-alert" id="seqRangeAlert" style="display:none;"></div>
+      </div>
+
+      <!-- GRID CONTROLS -->
+      <div class="grid-title-row">
+        <div class="section-title">Cuadrícula 1–39</div>
+        <div class="btn-group">
+          <button class="btn-secondary" onclick="clearSelection()">✕ Limpiar</button>
+          <button class="btn-primary" onclick="randomize()">🎲 Randomize</button>
+          <button class="btn-primary" id="btnSave" onclick="saveSelection()" style="background:var(--green-dark);">✓ Guardar</button>
+        </div>
+      </div>
+
+      <!-- HEALTH BAR -->
+      <div class="health-container">
+        <div class="health-label">
+          <span>Salud de la Combinación</span>
+          <span id="healthScore">0%</span>
+        </div>
+        <div class="health-bar-bg"><div id="healthBar" class="health-bar-fill"></div></div>
+        <div class="health-feedback" id="healthFeedback"></div>
+      </div>
+
+      <!-- SELECTION INFO -->
+      <div class="selection-info">
+        <div class="sel-numbers" id="selDisplay"></div>
+        <div style="text-align:center;margin-left:16px;">
+          <div class="sel-count" id="selCount">0</div>
+          <div class="sel-count-label">/ 6 números</div>
+        </div>
+      </div>
+
+      <!-- NUMBER GRID -->
+      <div class="number-grid" id="numberGrid"></div>
+
+      <!-- FILTERS -->
+      <div class="filters-bar">
+        <div class="filter-btn active" data-filter="all" onclick="setFilter(this, 'all')">Todos</div>
+        <div class="filter-btn" data-filter="primos" onclick="setFilter(this, 'primos')">🟠 Primos</div>
+        <div class="filter-btn" data-filter="compuestos" onclick="setFilter(this, 'compuestos')">⬛ Compuestos</div>
+        <div class="filter-btn" data-filter="pool" onclick="setFilter(this, 'pool')">🟢 Pool</div>
+        <div class="filter-btn" data-filter="calientes" onclick="setFilter(this, 'calientes')">🔴 Calientes</div>
+        <div class="filter-btn" data-filter="frios" onclick="setFilter(this, 'frios')">🔵 Fríos</div>
+        <div class="filter-btn" data-filter="pares" onclick="setFilter(this, 'pares')">Pares</div>
+        <div class="filter-btn" data-filter="impares" onclick="setFilter(this, 'impares')">Impares</div>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="filter-legend">
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--orange); border-radius:50%; width:8px; height:8px;"></div>
+          Punto Naranja = Primo
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:var(--bg4);border:1px solid var(--border);"></div>
+          Fondo oscuro = Compuesto
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="background:rgba(0,200,83,0.12);border:3px solid var(--green);"></div>
+          Verde = Pool activo
+        </div>
+        <div class="legend-item">
+          <span>🔥</span> Caliente
+        </div>
+        <div class="legend-item">
+          <span>❄️</span> Frío
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="border:3px solid #F27798; background:transparent;"></div>
+          Borde Rosa = Natural
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="border:3px solid #4A9EFF; background:transparent;"></div>
+          Borde Azul = Socio
+        </div>
+        <div class="legend-item">
+          <span style="text-decoration: underline; font-weight: 900; color: var(--text); padding: 0 4px;">39</span>
+          Subrayado = Intersección Crítica (Herencia Dual)
+        </div>
+        <div class="legend-item">
+          <div class="legend-swatch" style="border:2px solid var(--gold); background:transparent; animation: pulse-suggest 1s infinite;"></div>
+          Parpadeo = Sugerencia Inteligente
+        </div>
+      </div>
+
+      <div class="filters-bar" style="margin-top:-10px; margin-bottom:20px;">
+        <div class="filter-btn" data-filter="imm_partners" onclick="setFilter(this, 'imm_partners')">📍 Capa Inmediata</div>
+        <div class="filter-btn" data-filter="lot_partners" onclick="setFilter(this, 'lot_partners')">🏗️ Capa de Lote</div>
+      </div>
+
+    </div>
+
+    <!-- TAB: ANÁLISIS -->
+    <div class="tab-content" id="content-analisis">
+      <div class="section-title">Probabilidad por Posición</div>
+      <div class="pos-prob-grid" id="posProbGrid" style="margin-bottom:20px;"></div>
+
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <div class="analysis-card-title">Frecuencia histórica (25 sorteos)</div>
+          <div class="position-bars" id="freqBars"></div>
+        </div>
+        <div class="analysis-card">
+          <div class="analysis-card-title">Índice caliente/frío</div>
+          <div id="hotColdChart"></div>
+        </div>
+        <div class="analysis-card" style="grid-column: span 2;">
+          <div class="analysis-card-title">🔢 Mapa de Deuda (Sorteos sin aparecer)</div>
+          <div id="debtMap" style="display:grid; grid-template-columns: repeat(13, 1fr); gap:4px;"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Direccionalidad por Posición</div>
+      <div id="directionalityTable" style="margin-bottom:20px;"></div>
+    </div>
+
+    <!-- TAB: HISTORIAL -->
+    <div class="tab-content" id="content-historial">
+      <div class="section-title">Últimos 25 Sorteos</div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Números</th>
+            <th>Suma</th>
+            <th>Rango</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+
+    <!-- TAB: GESTOR DE DATOS -->
+    <div class="tab-content" id="content-datos">
+      <div class="section-title">Importación Manual de Sorteos</div>
+      <div class="analysis-card">
+        <p style="font-size: 13px; color: var(--text2); margin-bottom: 12px;">
+          Sube un archivo <strong>CSV</strong> o pega los resultados (NPRODUCTO,CONCURSO,F1-F6,F7,BOLSA,FECHA).
+        </p>
+        <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom: 16px; font-size: 12px; color: var(--text2); display: block; background: var(--bg4); padding: 8px; border-radius: 6px; border: 1px solid var(--border2); width: 100%;">
+        <textarea id="manualDataInput" style="width: 100%; height: 200px; background: var(--bg4); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 16px;" placeholder="Ejemplo:&#10;30,1633,2,3,9,28,36,38,25,5500000,12/05/2026"></textarea>
+        <div class="btn-group">
+          <button class="btn-primary" onclick="importManualData()">Importar Texto</button>
+          <button class="btn-primary" onclick="importCSVData()" style="background: var(--bg4); border: 1px solid var(--border2);">Subir CSV</button>
+          <button class="btn-secondary" onclick="clearSavedData()">Limpiar Base de Datos</button>
+        </div>
+        <div id="importStatus" style="margin-top: 12px; font-size: 11px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="notif-box" id="notifBox"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const PRIMES = new Set([2,3,5,7,11,13,17,19,23,29,31,37]);
+let HISTORY = [];
+let FREQ = {};
+let HOT = new Set();
+let COLD = new Set();
+let POOL = new Set();
+let INHERITED = new Set();
+let IMMEDIATE_NATURALS = new Set();
+let IMMEDIATE_PARTNERS = new Set();
+let LOTE_NATURALS = new Set();
+let LOTE_PARTNERS = new Set();
+let CRITICAL_PARTNERS = new Set();
+let DEBT = {};
+let POS_PROB = [];
+let sorted = []; // Variable global necesaria para los cálculos de análisis
+
+async function generateData(externalData = null) {
+  // 1. Intentar cargar desde localStorage (Datos manuales guardados)
+  const localData = JSON.parse(localStorage.getItem('melate_real_history') || '[]');
+  
+  // 2. Combinar con externalData (JSON) si existe
+  let combinedData = [...localData];
+  if (externalData && Array.isArray(externalData)) {
+    combinedData = [...combinedData, ...externalData];
+  }
+
+  if (combinedData.length > 0) {
+    // Eliminar duplicados por ID de sorteo y ordenar
+    const uniqueMap = new Map();
+    combinedData.forEach(item => uniqueMap.set(item.sorteo || item.id, item));
+    
+    HISTORY = Array.from(uniqueMap.values()).map(item => {
+      let d;
+      if (typeof item.fecha === 'string' && item.fecha.includes('-')) {
+        // Dividimos la fecha YYYY-MM-DD y creamos el objeto en hora local
+        const parts = item.fecha.split('-').map(Number);
+        d = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        d = new Date(item.fecha);
+      }
+      return {
+        id: item.sorteo || item.id,
+        date: d,
+        nums: typeof item.combinacion === 'string' ? item.combinacion.split(',').map(Number).sort((a, b) => a - b) : item.nums,
+        bolsa: item.bolsa || 0
+      };
+    }).sort((a, b) => b.id - a.id);
+
+    updateSourceBadge(true, HISTORY[0]?.id);
+    updateJackpotUI();
+  } else {
+    // Ya no generamos datos ficticios automáticamente, mostramos vacío o aviso
+    HISTORY = [];
+    updateSourceBadge(false);
+  }
+  updateCalculatedData();
+}
+
+function getLot(id) {
+  // L1: 0,5 | L2: 1,6 | L3: 2,7 | L4: 3,8 | L5: 4,9
+  // El residuo de id % 5 nos da grupos 0,1,2,3,4 que mapean perfectamente a los lotes.
+  return (id % 5) + 1;
+}
+
+function updateCalculatedData() {
+  // Limitamos el análisis a los últimos 25 sorteos para detectar tendencias actuales
+  const analysisHistory = HISTORY.slice(0, 25);
+  const totalHistory = analysisHistory.length || 1;
+
+  // Frecuencias
+  for(let n = 1; n <= 39; n++) FREQ[n] = 0;
+  analysisHistory.forEach(h => h.nums.forEach(n => FREQ[n]++));
+
+  sorted = Object.entries(FREQ).sort((a,b) => b[1]-a[1]);
+  HOT = new Set(sorted.slice(0,10).map(x => +x[0]));
+  COLD = new Set(sorted.slice(-10).map(x => +x[0]));
+  POOL = new Set(sorted.slice(0,15).map(x => +x[0]));
+
+  // HERENCIA DE DOS FUENTES Y SOCIOS
+  const nextId = HISTORY.length > 0 ? HISTORY[0].id + 1 : 0;
+  const nextLot = getLot(nextId);
+
+  const getNeighborsOnly = (nums) => {
+    let p = new Set();
+    nums.forEach(n => {
+      if(n > 1) p.add(n-1);
+      if(n < 39) p.add(n+1);
+    });
+    nums.forEach(n => p.delete(n)); // Quitar los naturales para no duplicar bordes
+    return p;
+  };
+
+  // A. Antecesor Inmediato
+  if (HISTORY.length > 0) {
+    IMMEDIATE_NATURALS = new Set(HISTORY[0].nums);
+    IMMEDIATE_PARTNERS = getNeighborsOnly(HISTORY[0].nums);
+  } else {
+    IMMEDIATE_NATURALS = new Set();
+    IMMEDIATE_PARTNERS = new Set();
+  }
+
+  // B. Antecesor de Lote
+  const lotAnc = HISTORY.find(h => getLot(h.id) === nextLot);
+  if (lotAnc) {
+    LOTE_NATURALS = new Set(lotAnc.nums);
+    LOTE_PARTNERS = getNeighborsOnly(lotAnc.nums);
+  } else {
+    LOTE_NATURALS = new Set();
+    LOTE_PARTNERS = new Set();
+  }
+
+  // C. Intersección Crítica
+  const allImm = new Set([...IMMEDIATE_NATURALS, ...IMMEDIATE_PARTNERS]);
+  const allLot = new Set([...LOTE_NATURALS, ...LOTE_PARTNERS]);
+  CRITICAL_PARTNERS = new Set(
+    [...allImm].filter(x => allLot.has(x))
+  );
+
+  // Heredados
+  INHERITED = new Set();
+  HISTORY.slice(0,3).forEach(h => h.nums.forEach(n => INHERITED.add(n)));
+
+  // Deuda
+  for(let n=1; n<=39; n++) {
+    const lastIdx = analysisHistory.findIndex(h => h.nums.includes(n));
+    DEBT[n] = lastIdx === -1 ? 25 : lastIdx;
+  }
+
+  // Probabilidad por posición
+  POS_PROB = Array.from({length:6}, (_,i) => {
+    const f = {};
+    for(let n=1;n<=39;n++) f[n]=0;
+    analysisHistory.forEach(h => { if(h.nums[i]) f[h.nums[i]]++; });
+    return Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>({num:+x[0], pct: Math.round(x[1]/totalHistory*100)}));
+  });
+}
+
+// Position ranges (min/max expected)
+const POS_RANGES = [
+  {min:1, max:12, label:'P1'},
+  {min:5, max:20, label:'P2'},
+  {min:10, max:26, label:'P3'},
+  {min:14, max:31, label:'P4'},
+  {min:20, max:36, label:'P5'},
+  {min:26, max:39, label:'P6'},
+];
+
+// State
+let tickets = [];
+let activeTicket = null;
+let currentSelection = []; // Números seleccionados actualmente en la cuadrícula
+let activeFilters = new Set(['all']); // Filtros visuales activos en la cuadrícula (ahora un Set)
+let activeRules = new Set(['pool']);
+let activeLayers = new Set(['temp']); // Solo indicadores básicos al inicio
+let focusedNum = null;
+
+// ============================================================
+// INIT
+// ============================================================
+
+async function init() {
+  await generateData();
+  renderGrid();
+  addTicket();
+  renderHistory();
+  renderAnalysis();
+  updateNextDraw();
+  updateStats();
+  updateHealth();
+  renderFilterButtons(); // Inicializa el estado visual de los botones de filtro
+}
+
+function updateNextDraw() {
+  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const now = new Date();
+  // Next Wed or Sun
+  let next = new Date(now);
+  while(next.getDay() !== 0 && next.getDay() !== 3) {
+    next.setDate(next.getDate() + 1);
+  }
+  document.getElementById('nextDraw').textContent =
+    `${days[next.getDay()]} ${next.getDate()}/${next.getMonth()+1}`;
+}
+
+async function syncData() {
+  showNotif('Conectando con servidor de resultados reales...', 'info');
+  
+  try {
+    // Intentamos cargar el archivo JSON local.
+    // En un entorno de producción, esta URL apuntaría a tu API o a un archivo JSON en tu servidor.
+    const response = await fetch('melate_retro_results.json'); 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Pasamos los datos reales a generateData
+    await generateData(data);
+    console.log("Datos cargados desde JSON:", data);
+    
+    renderGrid();
+    renderAnalysis();
+    renderHistory();
+    showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
+  } catch (error) {
+    console.error("Error al cargar datos externos:", error);
+    showNotif('Error de conexión o archivo no encontrado. Usando datos simulados.', 'error');
+    // Si falla la carga del JSON, volvemos a generar datos simulados
+    await generateData();
+    renderGrid();
+    renderAnalysis();
+    renderHistory();
+  }
+}
+
+function importManualData() {
+  const input = document.getElementById('manualDataInput').value.trim();
+  if (!input) return;
+  processDataString(input);
+}
+
+async function importCSVData() {
+  const fileInput = document.getElementById('csvFileInput');
+  const file = fileInput.files[0];
+  if (!file) {
+    showNotif('Por favor selecciona un archivo .csv', 'warning');
+    return;
+  }
+  const text = await file.text();
+  processDataString(text);
+  fileInput.value = ''; // Limpiar selector
+}
+
+function processDataString(input) {
+  const lines = input.split('\n');
+  const newResults = [];
+
+  lines.forEach(line => {
+    if (line.toLowerCase().includes('nproducto') || !line.trim()) return;
+    
+    const parts = line.split(',');
+    let sorteo, fechaRaw, combinacion, bolsa = 0;
+
+    if (parts.length >= 11) {
+      // Nuevo formato: NPRODUCTO,CONCURSO,F1,F2,F3,F4,F5,F6,F7,BOLSA,FECHA
+      sorteo = parseInt(parts[1]?.trim());
+      fechaRaw = parts[10]?.trim();
+      combinacion = parts.slice(2, 8).map(n => n.trim()).join(',');
+      bolsa = parseFloat(parts[9]?.trim()) || 0;
+    } else if (parts.length >= 8) {
+      // Formato anterior: Sorteo, Fecha, N1, N2, N3, N4, N5, N6
+      sorteo = parseInt(parts[0]?.trim());
+      fechaRaw = parts[1]?.trim();
+      combinacion = parts.slice(2, 8).map(n => n.trim()).join(',');
+    }
+
+    // Conversión de Fecha: DD/MM/YYYY a YYYY-MM-DD para estabilidad en JS
+    let fechaIso = fechaRaw;
+    if (fechaRaw && fechaRaw.includes('/')) {
+      const d = fechaRaw.split('/');
+      if (d.length === 3) {
+        // Si el primer elemento tiene 4 dígitos, asumimos YYYY/MM/DD, si no DD/MM/YYYY
+        if (d[0].length === 4) {
+          fechaIso = `${d[0]}-${d[1].padStart(2, '0')}-${d[2].padStart(2, '0')}`;
+        } else {
+          fechaIso = `${d[2]}-${d[1].padStart(2, '0')}-${d[0].padStart(2, '0')}`;
+        }
+      }
+    }
+
+    if (!isNaN(sorteo) && fechaIso) {
+      newResults.push({ sorteo, fecha: fechaIso, combinacion, bolsa });
+    }
+  });
+
+  if (newResults.length > 0) {
+    const currentSaved = JSON.parse(localStorage.getItem('melate_real_history') || '[]');
+    // Usamos un Map para evitar sorteos duplicados, dando prioridad a los nuevos
+    const map = new Map();
+    currentSaved.forEach(item => map.set(item.sorteo, item));
+    newResults.forEach(item => map.set(item.sorteo, item));
+    
+    const merged = Array.from(map.values());
+    localStorage.setItem('melate_real_history', JSON.stringify(merged));
+    
+    showNotif(`¡Éxito! Se procesaron ${newResults.length} registros válidos.`, 'success');
+    generateData();
+    renderGrid();
+    renderAnalysis();
+    renderHistory();
+    document.getElementById('manualDataInput').value = '';
+  } else {
+    showNotif('No se encontraron datos válidos en el formato correcto', 'error');
+  }
+}
+
+function clearSavedData() {
+  if(confirm('¿Seguro que quieres borrar todos los datos guardados?')) {
+    localStorage.removeItem('melate_real_history');
+    location.reload();
+  }
+}
+
+function updateSourceBadge(isReal, sorteoId = null) {
+  const el = document.getElementById('dataSourceBadge');
+  if (isReal) {
+    el.innerHTML = `<span style="color:var(--green)">● Datos Reales (Sorteo #${sorteoId})</span>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--red)">○ Modo Simulación (Sin Datos)</span>`;
+  }
+}
+
+// ============================================================
+// GRID
+// ============================================================
+
+function renderGrid() {
+  const grid = document.getElementById('numberGrid');
+  grid.innerHTML = '';
+
+  for(let n = 1; n <= 39; n++) {
+    const cell = document.createElement('div');
+    cell.className = 'num-cell';
+    cell.dataset.num = n;
+    cell.textContent = n;
+
+    // Base types
+    if(PRIMES.has(n)) cell.classList.add('prime');
+
+    // Layers
+    if(activeLayers.has('temp')) {
+      if(HOT.has(n)) cell.classList.add('hot');
+      if(COLD.has(n)) cell.classList.add('cold');
+    }
+    
+    if(activeLayers.has('pool') && POOL.has(n)) {
+      cell.classList.add('pool');
+    }
+
+    let isNatural = false;
+    let isPartner = false;
+
+    // Solo calculamos indicadores de herencia si las capas están activas en activeLayers
+    if (activeLayers.has('imm_partners')) {
+      if (IMMEDIATE_NATURALS.has(n)) isNatural = true;
+      else if (IMMEDIATE_PARTNERS.has(n)) isPartner = true;
+    }
+    if (activeLayers.has('lot_partners')) {
+      if (LOTE_NATURALS.has(n)) isNatural = true;
+      else if (LOTE_PARTNERS.has(n)) isPartner = true;
+    }
+
+    if (isNatural) cell.classList.add('natural-heritance');
+    else if (isPartner) cell.classList.add('partner-heritance');
+
+    if (CRITICAL_PARTNERS.has(n) && activeLayers.has('imm_partners') && activeLayers.has('lot_partners')) {
+        cell.style.fontWeight = '900';
+        cell.style.textDecoration = 'underline';
+    }
+
+    if(activeLayers.has('herencia') && INHERITED.has(n)) {
+      cell.style.boxShadow = 'inset 0 0 0 2px var(--gold)';
+    }
+
+    if(activeLayers.has('relaciones') && focusedNum) {
+      const isNeighbor = Math.abs(focusedNum - n) === 1;
+      const isSameTerm = focusedNum % 10 === n % 10;
+      if(!isNeighbor && !isSameTerm && focusedNum !== n) cell.classList.add('layer-hidden');
+    }
+
+    // Aplicar Filtro Visual Activo
+    if (!activeFilters.has('all') && activeFilters.size > 0) {
+      let shouldBeVisibleByFilter = false;
+      for (const filter of activeFilters) {
+        if (filter === 'primos' && PRIMES.has(n)) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'compuestos' && !PRIMES.has(n) && n !== 1) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'pool' && POOL.has(n)) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'calientes' && HOT.has(n)) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'frios' && COLD.has(n)) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'pares' && n % 2 === 0) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'impares' && n % 2 !== 0) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'imm_partners' && (IMMEDIATE_NATURALS.has(n) || IMMEDIATE_PARTNERS.has(n))) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+        if (filter === 'lot_partners' && (LOTE_NATURALS.has(n) || LOTE_PARTNERS.has(n))) {
+          shouldBeVisibleByFilter = true;
+          break;
+        }
+      }
+      if (!shouldBeVisibleByFilter) {
+        cell.classList.add('layer-hidden');
+      }
+    }
+    // Selected
+    if(currentSelection.includes(n)) cell.classList.add('selected');
+    
+    const suggestions = getSeqSuggestions();
+    if(suggestions.has(n) && !currentSelection.includes(n)) cell.classList.add('suggested');
+
+    cell.onclick = (e) => {
+      if(activeLayers.has('relaciones')) {
+        focusedNum = focusedNum === n ? null : n;
+        renderGrid();
+      } else {
+        toggleNum(n);
+        spawnKonfetti(e);
+      }
+    };
+
+    grid.appendChild(cell);
+  }
+
+  renderSelDisplay();
+  updateSeqAssistant();
+}
+
+function toggleNum(n) {
+  if(currentSelection.includes(n)) {
+    currentSelection = currentSelection.filter(x => x !== n);
+  } else {
+    if(currentSelection.length >= 6) {
+      showNotif('Máximo 6 números por boleto', 'warning');
+      return;
+    }
+    currentSelection.push(n);
+    currentSelection.sort((a,b)=>a-b);
+  }
+  renderGrid();
+  updateHealth();
+}
+
+function renderSelDisplay() {
+  const el = document.getElementById('selDisplay');
+  el.innerHTML = '';
+
+  const ordered = [...currentSelection].sort((a,b)=>a-b);
+  for(let i = 0; i < 6; i++) {
+    const pill = document.createElement('div');
+    if(ordered[i]) {
+      pill.className = 'sel-num-pill';
+      pill.textContent = ordered[i];
+    } else {
+      pill.className = 'sel-empty';
+      pill.textContent = '+';
+    }
+    el.appendChild(pill);
+  }
+  document.getElementById('selCount').textContent = currentSelection.length;
+}
+
+function updateHealth() {
+  const bar = document.getElementById('healthBar');
+  const scoreText = document.getElementById('healthScore');
+  const feedbackEl = document.getElementById('healthFeedback');
+  
+  if (!bar || !scoreText || !feedbackEl) return;
+  feedbackEl.innerHTML = ''; 
+
+  if(currentSelection.length === 0) { 
+    bar.style.width = '0%'; 
+    scoreText.textContent = '0%'; 
+    feedbackEl.innerHTML = '<p style="color:var(--text3);">Selecciona 6 números para evaluar la salud de tu combinación.</p>';
+    return; 
+  }
+  
+  let score = 0;
+  const primes = currentSelection.filter(n => PRIMES.has(n)).length;
+  const pool = currentSelection.filter(n => POOL.has(n)).length;
+  const inheritance = currentSelection.filter(n => INHERITED.has(n)).length;
+  const evens = currentSelection.filter(n => n % 2 === 0).length;
+  const feedbackMessages = [];
+
+  // Si no hay historial, no podemos calcular la salud de forma significativa.
+  if (HISTORY.length === 0) {
+    bar.style.width = '0%';
+    scoreText.textContent = '0%';
+    feedbackEl.innerHTML = '<p style="color:var(--red);">❌ No hay datos históricos cargados. Sincroniza o importa datos para evaluar la salud.</p>';
+    return;
+  }
+  // Lógica de "Salud de Combinación"
+  if(primes >= 1 && primes <= 3) score += 25; // Equilibrio primo/compuesto
+  if(pool >= 3) score += 35; // Presencia en Pool Verde
+  if(inheritance >= 1) score += 15; // Al menos un heredado
+  if(evens >= 2 && evens <= 4) score += 25; // Equilibrio Par/Impar (Nuevo)
+  
+  // Penalizaciones por "Innombrables"
+  if(primes === 6 || primes === 0) score -= 20;
+  if(evens === 6 || evens === 0) score -= 20; // Penalizar exceso de paridad
+  
+  score = Math.max(0, Math.min(100, score));
+  bar.style.width = score + '%';
+  scoreText.textContent = score + '%';
+
+  bar.classList.remove('health-warning', 'health-optimal');
+  if(score < 40) bar.classList.add('health-warning');
+  else if(score > 80) bar.classList.add('health-optimal');
+
+  // Generar mensajes de feedback solo si se han seleccionado 6 números
+  if (currentSelection.length === 6) {
+    if (score === 100) {
+      feedbackEl.innerHTML = '<p style="color:var(--green);">✅ ¡Combinación con salud óptima!</p>';
+    } else {
+      // Si el score no es 100, listamos los criterios que no se cumplen
+      feedbackMessages.push('<p style="color:var(--text2);">Para un 100% de salud, considera:</p><ul>');
+      
+      if(!(primes >= 1 && primes <= 3)) {
+        if (primes === 0) feedbackMessages.push('<li class="danger">❌ Sin números primos (ideal 1-3)</li>');
+        else if (primes === 6) feedbackMessages.push('<li class="danger">❌ Solo números primos (ideal 1-3)</li>');
+        else if (primes < 1) feedbackMessages.push('<li class="warning">⚠️ Pocos números primos (ideal 1-3)</li>');
+        else if (primes > 3) feedbackMessages.push('<li class="warning">⚠️ Demasiados números primos (ideal 1-3)</li>');
+      }
+      if(pool < 3) feedbackMessages.push('<li class="warning">⚠️ Pocos números del Pool (ideal >= 3)</li>');
+      if(inheritance < 1) feedbackMessages.push('<li class="warning">⚠️ Falta al menos 1 número "heredado"</li>');
+      if(!(evens >= 2 && evens <= 4)) {
+        if (evens === 0) feedbackMessages.push('<li class="danger">❌ Sin números pares (ideal 2-4)</li>');
+        else if (evens === 6) feedbackMessages.push('<li class="danger">❌ Solo números pares (ideal 2-4)</li>');
+        else if (evens < 2) feedbackMessages.push('<li class="warning">⚠️ Pocos números pares (ideal 2-4)</li>');
+        else if (evens > 4) feedbackMessages.push('<li class="warning">⚠️ Demasiados números pares (ideal 2-4)</li>');
+      }
+
+      // VALIDACIÓN DE HERENCIA DIRECTA/LOTE
+      const orphans = currentSelection.filter(n => !IMMEDIATE_PARTNERS.has(n) && !LOTE_PARTNERS.has(n));
+      if(orphans.length > 2) {
+        feedbackMessages.push(`<li class="warning">💡 ${orphans.length} números no tienen herencia (Inmediata o Lote). ¿Estás seguro?</li>`);
+      }
+
+      feedbackMessages.push('</ul>');
+      feedbackEl.innerHTML = feedbackMessages.join('');
+    }
+  } else {
+    feedbackEl.innerHTML = '<p style="color:var(--text3);">Selecciona 6 números para evaluar la salud de tu combinación.</p>';
+  }
+}
+
+// ============================================================
+// SEQUENTIAL ASSISTANT
+// ============================================================
+
+function getSeqSuggestions() {
+  const suggestions = new Set();
+  if(currentSelection.length === 0 || currentSelection.length >= 6) return suggestions;
+
+  const pos = currentSelection.length; // next position (0-indexed)
+  const range = POS_RANGES[pos];
+  const lastNum = currentSelection[currentSelection.length - 1];
+
+  // Suggest numbers in expected range for next position
+  for(let n = range.min; n <= range.max; n++) {
+    if(!currentSelection.includes(n)) {
+      // Prefer pool + position range
+      if(POOL.has(n)) suggestions.add(n);
+    }
+  }
+
+  // If too few suggestions, add hot numbers in range
+  if(suggestions.size < 4) {
+    for(let n = range.min; n <= range.max; n++) {
+      if(!currentSelection.includes(n) && HOT.has(n)) suggestions.add(n);
+    }
+  }
+
+  return suggestions;
+}
+
+function updateSeqAssistant() {
+  const hint = document.getElementById('seqHint');
+  const rangeAlert = document.getElementById('seqRangeAlert');
+
+  if(currentSelection.length === 0) {
+    hint.textContent = 'Selecciona el primer número para activar las sugerencias inteligentes de secuencia.';
+    rangeAlert.style.display = 'none';
+    return;
+  }
+
+  if(currentSelection.length >= 6) {
+    hint.textContent = '✅ Combinación completa. Guarda el boleto o usa Randomize para ajustar.';
+    rangeAlert.style.display = 'none';
+    return;
+  }
+
+  const pos = currentSelection.length;
+  const range = POS_RANGES[pos];
+  const posNames = ['1ª','2ª','3ª','4ª','5ª','6ª'];
+  const sugSet = getSeqSuggestions();
+  const suggestions = [...sugSet].slice(0,5);
+
+  hint.innerHTML = `💡 <strong>Posición ${posNames[pos]}:</strong> Se recomiendan números entre ${range.min}–${range.max}. Tenemos ${sugSet.size} números del pool disponibles. <br>Sugeridos: ${suggestions.join(', ')}`;
+
+  rangeAlert.style.display = 'flex';
+  rangeAlert.textContent = `⚠ Rango esperado P${pos+1}: entre ${range.min} y ${range.max}`;
+}
+
+// ============================================================
+// RANDOMIZE
+// ============================================================
+
+function randomize() {
+  const rules = [...activeRules];
+  let pool = [];
+
+  // Build candidate pool based on rules
+  if(rules.includes('pool')) {
+    pool = [...POOL];
+  } else {
+    pool = Array.from({length:39}, (_,i) => i+1);
+  }
+
+  if(rules.includes('calientes')) {
+    pool = pool.filter(n => HOT.has(n));
+    if(pool.length < 6) pool = [...HOT];
+  }
+
+  if(rules.includes('frios')) {
+    pool = [...COLD];
+  }
+
+  if(rules.includes('heredados')) {
+    pool = pool.filter(n => INHERITED.has(n));
+    if(pool.length < 6) pool = [...INHERITED];
+  }
+
+  if(rules.includes('primos')) {
+    pool = pool.filter(n => PRIMES.has(n));
+  }
+
+  // Ensure enough candidates
+  if(pool.length < 6) {
+    pool = Array.from({length:39}, (_,i) => i+1);
+  }
+
+  // Shuffle and pick 6
+  let result = [];
+
+  if(rules.includes('consecutivos')) {
+    const start = pool[Math.floor(Math.random() * (pool.length - 5))];
+    result = [start, start+1, start+2, start+3, start+4, start+5].filter(n => n <= 39);
+    if(result.length < 6) result = pickRandom(pool, 6);
+  } else if(rules.includes('terminacion')) {
+    const term = Math.floor(Math.random() * 10);
+    const termPool = pool.filter(n => n % 10 === term);
+    result = termPool.length >= 3 ? pickRandom(termPool, Math.min(3, termPool.length)) : [];
+    const rest = pool.filter(n => !result.includes(n));
+    result = [...result, ...pickRandom(rest, 6 - result.length)];
+  } else if(rules.includes('vecinos')) {
+    const anchor = pool[Math.floor(Math.random() * pool.length)];
+    const neighbors = [anchor-2,anchor-1,anchor,anchor+1,anchor+2].filter(n => n>=1 && n<=39);
+    result = pickRandom(neighbors, Math.min(3, neighbors.length));
+    const rest = pool.filter(n => !result.includes(n));
+    result = [...result, ...pickRandom(rest, 6 - result.length)];
+  } else {
+    result = pickRandom(pool, 6);
+  }
+
+  currentSelection = result.sort((a,b)=>a-b);
+  renderGrid();
+  updateHealth();
+  showNotif('🎲 Combinación generada con Hybrid Luck', 'success');
+}
+
+function pickRandom(arr, n) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+// ============================================================
+// TICKETS
+// ============================================================
+
+function addTicket() {
+  const id = Date.now();
+  const ticket = {
+    id,
+    name: `Boleto ${tickets.length + 1}`,
+    nums: [],
+    active: true,
+    cost: 1
+  };
+  tickets.push(ticket);
+  activeTicket = ticket;
+  currentSelection = [];
+  renderTickets();
+  updateStats();
+  document.getElementById('tc-jugadas').textContent = tickets.length;
+}
+
+function renderTickets() {
+  const list = document.getElementById('ticketsList');
+  list.innerHTML = '';
+
+  tickets.forEach(t => {
+    const card = document.createElement('div');
+    card.className = `ticket-card${t.id === activeTicket?.id ? ' active' : ''}`;
+    card.onclick = () => selectTicket(t.id);
+
+    card.innerHTML = `
+      <div class="ticket-header">
+        <span class="ticket-name">${t.name}</span>
+        <div class="ticket-actions">
+          <button class="btn-icon" onclick="event.stopPropagation(); renameTicket(${t.id})">✏</button>
+          <button class="btn-icon del" onclick="event.stopPropagation(); deleteTicket(${t.id})">✕</button>
+        </div>
+      </div>
+      <div class="ticket-numbers">
+        ${Array.from({length:6}, (_,i) => `
+          <div class="ticket-num ${t.nums[i] ? 'filled' : 'empty'}">
+            ${t.nums[i] || '—'}
+          </div>
+        `).join('')}
+      </div>
+      <div class="ticket-status">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div class="status-dot ${t.nums.length === 6 ? 'active' : ''}"></div>
+          <span class="status-label">${t.nums.length}/6 números</span>
+        </div>
+        <span style="font-size:9px; color:var(--text3)">
+          ${t.nums.filter(n => PRIMES.has(n)).length}P | ${t.nums.filter(n => POOL.has(n)).length}V
+        </span>
+        <span class="cost-label">${t.cost} cupon</span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function selectTicket(id) {
+  const t = tickets.find(x => x.id === id);
+  if(!t) return;
+
+  // Save current selection to previous ticket
+  if(activeTicket) {
+    const prev = tickets.find(x => x.id === activeTicket.id);
+    if(prev) prev.nums = [...currentSelection];
+  }
+
+  activeTicket = t;
+  currentSelection = [...t.nums];
+  renderTickets();
+  renderGrid();
+  updateHealth();
+}
+
+function deleteTicket(id) {
+  tickets = tickets.filter(t => t.id !== id);
+  if(activeTicket?.id === id) {
+    activeTicket = tickets[tickets.length - 1] || null;
+    currentSelection = activeTicket ? [...activeTicket.nums] : [];
+  }
+  renderTickets();
+  renderGrid();
+  updateStats();
+  document.getElementById('tc-jugadas').textContent = tickets.length;
+  showNotif('Boleto eliminado', 'info');
+}
+
+function renameTicket(id) {
+  const t = tickets.find(x => x.id === id);
+  if(!t) return;
+  const name = prompt('Nombre del boleto:', t.name);
+  if(name) { t.name = name; renderTickets(); }
+}
+
+function saveSelection() {
+  if(!activeTicket) return;
+
+  if(currentSelection.length !== 6) {
+    showNotif('Selecciona exactamente 6 números', 'warning');
+    return;
+  }
+
+  activeTicket.nums = [...currentSelection];
+  renderTickets();
+  updateStats();
+  showNotif(`✅ ${activeTicket.name} guardado`, 'success');
+}
+
+function updateStats() {
+  const complete = tickets.filter(t => t.nums.length === 6).length;
+  document.getElementById('statTotal').textContent = tickets.length;
+  document.getElementById('statComplete').textContent = complete;
+}
+
+function updateJackpotUI() {
+  if (HISTORY.length > 0) {
+    const lastJackpot = HISTORY[0].bolsa;
+    const formatted = new Intl.NumberFormat('es-MX', { 
+      style: 'currency', 
+      currency: 'MXN',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0 
+    }).format(lastJackpot);
+    document.getElementById('jackpotValue').textContent = formatted;
+  }
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+
+function renderFilterButtons() {
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    const filter = b.dataset.filter;
+    if (activeFilters.has(filter)) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+}
+
+function setFilter(btn, filter) {
+  const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+
+  if (filter === 'all') {
+    activeFilters.clear();
+    activeFilters.add('all');
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    // Limpiar capas visuales al mostrar todo
+    activeLayers.delete('imm_partners');
+    activeLayers.delete('lot_partners');
+    activeLayers.delete('pool');
+    allBtn.classList.add('active');
+  } else {
+    if (activeFilters.has('all')) {
+      activeFilters.delete('all');
+      allBtn.classList.remove('active');
+    }
+
+    if (activeFilters.has(filter)) {
+      activeFilters.delete(filter);
+      // Si el filtro se apaga, eliminamos la capa visual correspondiente
+      if (['imm_partners', 'lot_partners', 'pool'].includes(filter)) activeLayers.delete(filter);
+    } else {
+      activeFilters.add(filter);
+      // Si el filtro se enciende, activamos la capa visual correspondiente
+      if (['imm_partners', 'lot_partners', 'pool'].includes(filter)) activeLayers.add(filter);
+    }
+    if (activeFilters.size === 0) activeFilters.add('all'); // Default to 'all' if no filters are active
+  }
+  renderFilterButtons(); // Actualiza el estado visual de todos los botones
+  renderGrid();
+}
+
+function toggleRule(el) {
+  const rule = el.dataset.rule;
+  if(activeRules.has(rule)) {
+    activeRules.delete(rule);
+    el.classList.remove('active');
+  } else {
+    activeRules.add(rule);
+    el.classList.add('active');
+  }
+}
+
+// ============================================================
+// TABS
+// ============================================================
+
+function switchTab(id) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab-${id}`).classList.add('active');
+  document.getElementById(`content-${id}`).classList.add('active');
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  body.innerHTML = '';
+  HISTORY.forEach(h => {
+    const tr = document.createElement('tr');
+    const numHtml = h.nums.map(n => `<span class="hist-num">${n}</span>`).join('');
+    const sum = h.nums.reduce((s,n)=>s+n,0);
+    const range = h.nums[5] - h.nums[0];
+    tr.innerHTML = `
+      <td style="color:var(--text3)">${h.id}</td>
+      <td style="color:var(--text3)">${h.date.getDate()}/${h.date.getMonth()+1}/${h.date.getFullYear()}</td>
+      <td>${numHtml}</td>
+      <td style="color:var(--gold)">${sum}</td>
+      <td style="color:var(--text3)">${range}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ============================================================
+// ANALYSIS
+// ============================================================
+
+function renderAnalysis() {
+  // Position probability grid
+  const grid = document.getElementById('posProbGrid');
+  grid.innerHTML = '';
+  POS_PROB.forEach((pos, i) => {
+    const col = document.createElement('div');
+    col.className = 'pos-col';
+    col.innerHTML = `
+      <div class="pos-col-header">P${i+1}</div>
+      <div class="pos-col-nums">
+        ${pos.slice(0,5).map((p,j) => `
+          <div class="pos-col-num rank${j+1}">
+            <span>${p.num}</span>
+            <span class="pos-col-pct">${p.pct}%</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    grid.appendChild(col);
+  });
+
+  // Frequency bars
+  const freqBars = document.getElementById('freqBars');
+  freqBars.innerHTML = '';
+  const topFreq = sorted.slice(0, 15);
+  const maxF = topFreq[0][1];
+
+  topFreq.forEach(([num, freq]) => {
+    const row = document.createElement('div');
+    row.className = 'pos-row';
+    row.innerHTML = `
+      <span class="pos-label">${num}</span>
+      <div class="pos-bar-bg">
+        <div class="pos-bar-fill" style="width:${Math.round(freq/maxF*100)}%;background:${HOT.has(+num)?'var(--red)':'var(--text3)'}"></div>
+      </div>
+      <span class="pos-nums">${freq}x</span>
+    `;
+    freqBars.appendChild(row);
+  });
+
+  // Hot/cold chart
+  const hcEl = document.getElementById('hotColdChart');
+  hcEl.innerHTML = '';
+  const hotArr = sorted.slice(0,8);
+  const coldArr = sorted.slice(-8).reverse();
+
+  const makeRow = (label, arr, color) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:8px;';
+    div.innerHTML = `
+      <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">${label}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${arr.map(([n,f]) => `
+          <span style="background:${color}22;border:1px solid ${color}55;color:${color};border-radius:4px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:11px;">${n} <small style="opacity:0.6">${f}</small></span>
+        `).join('')}
+      </div>
+    `;
+    hcEl.appendChild(div);
+  };
+
+  makeRow('🔴 Calientes', hotArr, '#FF4444');
+  makeRow('🔵 Fríos', coldArr, '#4A9EFF');
+
+  // Debt Map
+  const debtEl = document.getElementById('debtMap');
+  debtEl.innerHTML = '';
+  for(let n=1; n<=39; n++) {
+    const d = DEBT[n];
+    const div = document.createElement('div');
+    const intensity = Math.min(1, d / 15);
+    div.style.cssText = `
+      background: rgba(255, 184, 0, ${intensity});
+      border-radius: 3px; font-size: 9px; padding: 4px 0; text-align:center;
+      color: ${intensity > 0.5 ? '#000' : 'var(--text2)'};
+    `;
+    div.textContent = n;
+    debtEl.appendChild(div);
+  }
+
+  // Directionality table
+  const dirEl = document.getElementById('directionalityTable');
+  dirEl.innerHTML = `
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Posición</th>
+          <th>Rango esperado</th>
+          <th>Top 3 candidatos</th>
+          <th>Promedio histórico</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${POS_RANGES.map((r, i) => {
+          const avgs = HISTORY.map(h => h.nums[i]).filter(Boolean);
+          const avg = avgs.length ? Math.round(avgs.reduce((s,n)=>s+n,0)/avgs.length) : '—';
+          const top3 = POS_PROB[i].slice(0,3).map(p => p.num).join(', ');
+          return `<tr>
+            <td style="color:var(--red);font-weight:600">${r.label}</td>
+            <td style="color:var(--text3)">${r.min} – ${r.max}</td>
+            <td style="color:var(--gold)">${top3}</td>
+            <td style="color:var(--text2)">${avg}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+function showNotif(msg, type = 'info') {
+  const box = document.getElementById('notifBox');
+  const n = document.createElement('div');
+  n.className = `notif ${type}`;
+  n.textContent = msg;
+  box.appendChild(n);
+  setTimeout(() => n.remove(), 3200);
+}
+
+// ============================================================
+// KONFETTI
+// ============================================================
+
+function spawnKonfetti(e) {
+  const colors = ['var(--red)', 'var(--gold)', 'var(--green)', '#4A9EFF', 'var(--orange)'];
+  const x = e.clientX || window.innerWidth/2;
+  const y = e.clientY || window.innerHeight/2;
+  for(let i = 0; i < 8; i++) {
+    const el = document.createElement('div');
+    el.className = 'konfetti-piece';
+    el.style.cssText = `
+      left:${x + (Math.random()-0.5)*30}px;
+      top:${y}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      transform-origin:center;
+      animation-delay:${Math.random()*0.2}s;
+      border-radius:${Math.random()>0.5?'50%':'1px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+}
+
+// ============================================================
+// CLEAR
+// ============================================================
+
+function clearSelection() {
+  currentSelection = [];
+  renderGrid();
+  updateHealth();
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker registrado'))
+      .catch(err => console.log('Error al registrar SW', err));
+  });
+}
+</script>
+</body>
+</html>

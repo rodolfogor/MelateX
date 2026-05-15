@@ -1,0 +1,17 @@
+{
+  "name": "MelateX Retro",
+  "short_name": "MelateX",
+  "description": "Análisis Estadístico para Melate Retro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F0EB",
+  "theme_color": "#E8001D",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2111/2111463.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

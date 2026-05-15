@@ -1,0 +1,32 @@
+name: Actualizar Resultados Melate
+
+on:
+  schedule:
+    - cron: '0 5 * * 1,4' # Se ejecuta a las 5 AM UTC los Lunes y Jueves (post sorteo)
+  workflow_dispatch: # Permite ejecutarlo manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalar librerías
+        run: pip install requests beautifulsoup4
+
+      - name: Ejecutar Scraper
+        run: python update_results.py
+
+      - name: Guardar cambios
+        run: |
+          git config --global user.name 'MelateX Bot'
+          git config --global user.email 'bot@melatex.com'
+          git add melate_retro_results.json
+          git commit -m "Auto-update: Sorteos reales" || exit 0
+          git push
