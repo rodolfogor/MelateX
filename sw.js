@@ -1,6 +1,6 @@
 const CACHE_NAME = 'melatex-v1';
 const ASSETS = [
-  'melate-retro.html',
+  'index.html',
   'melate_retro_results.json'
 ];
 

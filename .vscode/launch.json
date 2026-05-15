@@ -7,8 +7,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open melate-retro.html",
-            "file": "/Users/rgor/loteria_env/MelateX/melate-retro.html"
+            "name": "Open index.html",
+            "file": "/Users/rgor/loteria_env/MelateX/index.html"
         }
     ]
 }
