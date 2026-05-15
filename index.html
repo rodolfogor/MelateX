@@ -160,6 +160,18 @@ body {
   grid-template-columns: 340px 1fr;
   gap: 0;
   min-height: calc(100vh - 100px);
+  transition: grid-template-columns 0.25s ease;
+}
+
+.app-body.sidebar-hidden {
+  grid-template-columns: 0 1fr;
+}
+
+.app-body.sidebar-hidden .sidebar {
+  overflow: hidden;
+  padding: 0;
+  border-right: none;
+  width: 0;
 }
 
 .sidebar {
@@ -854,18 +866,19 @@ body {
 }
 
 .seq-hint {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text2);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .seq-range-alert {
-  font-size: 11px;
-  color: var(--gold);
-  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+  margin-top: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 /* TABS CONTENT */
@@ -1219,8 +1232,45 @@ body {
   .fab { display: none !important; }
   .sheet-overlay { display: none !important; }
   .tickets-sheet { display: none !important; }
-  .sidebar { display: block !important; }
+  /* Sidebar visibility controlled by switchTab via .sidebar-hidden */
+  .app-body:not(.sidebar-hidden) .sidebar { display: block; }
 }
+
+/* TICKET VIRGINITY CHECK */
+.virgin-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.vc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.vc-name { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+.vc-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+}
+.vc-badge.virgen  { background: rgba(0,200,83,0.15);  color: var(--green); border: 1px solid rgba(0,200,83,0.3); }
+.vc-badge.parcial { background: rgba(255,184,0,0.15); color: var(--gold);  border: 1px solid rgba(255,184,0,0.3); }
+.vc-badge.repetida{ background: rgba(232,0,29,0.12);  color: var(--red);   border: 1px solid rgba(232,0,29,0.3); }
+.vc-badge.vacia   { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+.vc-nums { display: flex; gap: 3px; margin-bottom: 5px; }
+.vc-n {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600;
+  background: var(--bg4); border: 1px solid var(--border2); color: var(--text2);
+}
+.vc-n.match { background: var(--red); color: white; border-color: var(--red); }
+.vc-detail { font-size: 10px; color: var(--text3); line-height: 1.5; }
+.vc-empty { font-size: 11px; color: var(--text3); font-style: italic; padding: 12px 0; text-align: center; }
+
+@media (max-width: 768px) {
+  #content-historial > div { grid-template-columns: 1fr !important; }
+}
+
 </style>
 </head>
 <body>
@@ -1287,8 +1337,8 @@ body {
           <div class="stat-label">Boletos</div>
         </div>
         <div class="stat-box">
-          <div class="stat-value" id="statComplete">0</div>
-          <div class="stat-label">Listos</div>
+          <div class="stat-value" id="statCost" style="color:var(--green);">$0</div>
+          <div class="stat-label">Total MXN</div>
         </div>
       </div>
     </div>
@@ -1300,18 +1350,11 @@ body {
     <!-- TAB: JUGADAS -->
     <div class="tab-content active" id="content-jugadas">
 
-      <!-- SEQUENTIAL ASSISTANT -->
-      <div class="seq-assist" id="seqAssist">
-        <div class="seq-title">⚡ Asistente Secuencial</div>
-        <div class="seq-hint" id="seqHint">Selecciona el primer número para activar las sugerencias inteligentes de secuencia.</div>
-        <div class="seq-range-alert" id="seqRangeAlert" style="display:none;"></div>
-      </div>
-
       <!-- GRID CONTROLS -->
       <div class="grid-title-row">
         <div class="section-title">Cuadrícula 1–39</div>
         <div class="btn-group">
-          <button class="btn-secondary" onclick="clearSelection()">✕ Limpiar</button>
+          <button class="btn-secondary" onclick="clearSelection()" style="background:#ffffff;color:#1A1A2E;border-color:var(--border2);font-weight:700;">✕ Limpiar</button>
           <button class="btn-primary" onclick="randomize()">⚡ Randomize</button>
           <button class="btn-primary" id="btnSave" onclick="saveSelection()" style="background:var(--green-dark);">✓ Guardar</button>
         </div>
@@ -1338,6 +1381,13 @@ body {
 
       <!-- NUMBER GRID -->
       <div class="number-grid" id="numberGrid"></div>
+
+      <!-- SEQUENTIAL ASSISTANT (below grid) -->
+      <div class="seq-assist" id="seqAssist" style="margin-top:14px;">
+        <div class="seq-title">⚡ Asistente Secuencial</div>
+        <div class="seq-hint" id="seqHint">Selecciona el primer número para activar las sugerencias inteligentes de secuencia.</div>
+        <div class="seq-range-alert" id="seqRangeAlert" style="display:none;"></div>
+      </div>
 
       <!-- FILTERS -->
       <div class="filters-bar">
@@ -1422,19 +1472,39 @@ body {
 
     <!-- TAB: HISTORIAL -->
     <div class="tab-content" id="content-historial">
-      <div class="section-title">Últimos 25 Sorteos</div>
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Números</th>
-            <th>Suma</th>
-            <th>Rango</th>
-          </tr>
-        </thead>
-        <tbody id="historyBody"></tbody>
-      </table>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;">
+
+        <!-- LEFT: Ticket Virginity Check -->
+        <div>
+          <div class="section-title">🔍 Verificador de Boletos</div>
+          <div id="ticketVirginityList"></div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text3);line-height:1.6;">
+            <span style="color:var(--green);font-weight:700;">● Virgen</span> — nunca ha salido<br>
+            <span style="color:var(--gold);font-weight:700;">● Parcial</span> — 3+ aciertos en algún sorteo<br>
+            <span style="color:var(--red);font-weight:700;">● Repetida</span> — combinación exacta registrada
+          </div>
+        </div>
+
+        <!-- RIGHT: History table -->
+        <div>
+          <div class="section-title">Últimos 25 Sorteos</div>
+          <div style="overflow-x:auto;">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Fecha</th>
+                  <th>Números</th>
+                  <th>Suma</th>
+                  <th>Rango</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- TAB: GESTOR DE DATOS -->
@@ -1640,11 +1710,15 @@ async function init() {
 function updateNextDraw() {
   const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   const now = new Date();
-  // Next Wed or Sun
+  // Melate Retro draws on Tuesdays (2) and Saturdays (6)
   let next = new Date(now);
-  while(next.getDay() !== 0 && next.getDay() !== 3) {
-    next.setDate(next.getDate() + 1);
-  }
+  next.setHours(0,0,0,0);
+  const today = next.getDay();
+  // Find days until next Tue or Sat
+  const toTue = (2 - today + 7) % 7 || 7;
+  const toSat = (6 - today + 7) % 7 || 7;
+  const daysAhead = Math.min(toTue, toSat);
+  next.setDate(next.getDate() + daysAhead);
   document.getElementById('nextDraw').textContent =
     `${days[next.getDay()]} ${next.getDate()}/${next.getMonth()+1}`;
 }
@@ -2228,12 +2302,17 @@ function saveSelection() {
   renderTickets();
   updateStats();
   showNotif(`✅ ${activeTicket.name} guardado`, 'success');
+
+  // Auto-create next blank ticket ready to fill
+  addTicket();
 }
 
 function updateStats() {
   const complete = tickets.filter(t => t.nums.length === 6).length;
+  const totalCost = tickets.length * 10; // $10 MXN per ticket
   document.getElementById('statTotal').textContent = tickets.length;
-  document.getElementById('statComplete').textContent = complete;
+  const costEl = document.getElementById('statCost');
+  if (costEl) costEl.textContent = `$${totalCost}`;
   // Sync mobile sheet stats + FAB badge
   const sheetTotal = document.getElementById('sheetStatTotal');
   const sheetDone  = document.getElementById('sheetStatDone');
@@ -2314,6 +2393,9 @@ function switchTab(id) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(`tab-${id}`).classList.add('active');
   document.getElementById(`content-${id}`).classList.add('active');
+  // Sidebar only visible on Jugadas tab
+  document.querySelector('.app-body').classList.toggle('sidebar-hidden', id !== 'jugadas');
+  if (id === 'historial') renderVirginityCheck();
 }
 
 // ============================================================
@@ -2521,7 +2603,6 @@ function isMobile() { return window.innerWidth <= 768; }
 
 // ── Bottom nav tab switch ──────────────────
 function mobileTab(id) {
-  // Reuse existing switchTab but also update bottom nav
   switchTab(id);
   document.querySelectorAll('.bn-tab').forEach(t => t.classList.remove('active'));
   const btn = document.getElementById('bnt-' + id);
@@ -2529,6 +2610,40 @@ function mobileTab(id) {
 }
 
 // ── Tickets bottom sheet ───────────────────
+function copyTickets() {
+  const filled = tickets.filter(t => t.nums.length === 6);
+  if (filled.length === 0) {
+    showNotif('No hay boletos completos para copiar', 'warning');
+    return;
+  }
+  const text = filled.map((t, i) =>
+    `${t.name}: ${t.nums.join(' - ')}`
+  ).join('\n');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showNotif(`📋 ${filled.length} boleto(s) copiado(s)`, 'success');
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showNotif('📋 Boletos copiados al portapapeles', 'success');
+  } catch {
+    showNotif('No se pudo copiar. Intenta manualmente.', 'warning');
+  }
+  document.body.removeChild(ta);
+}
+
 function openSheet() {
   renderSheetTickets();
   document.getElementById('sheetOverlay').classList.add('open');
@@ -2632,6 +2747,83 @@ window.addEventListener('DOMContentLoaded', () => {
   updateFabBadge();
 });
 
+
+// ════════════════════════════════════════════
+// TICKET VIRGINITY CHECKER
+// ════════════════════════════════════════════
+function countMatches(ticketNums, drawNums) {
+  return ticketNums.filter(n => drawNums.includes(n)).length;
+}
+
+function renderVirginityCheck() {
+  const container = document.getElementById('ticketVirginityList');
+  if (!container) return;
+
+  const filledTickets = tickets.filter(t => t.nums.length === 6);
+
+  if (filledTickets.length === 0) {
+    container.innerHTML = '<div class="vc-empty">Guarda al menos un boleto completo para verificar.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+
+  filledTickets.forEach(ticket => {
+    let status = 'virgen';
+    let statusLabel = '● Virgen';
+    let bestMatch = 0;
+    let bestDrawId = null;
+    let bestDrawNums = [];
+
+    // Check against every draw in history
+    HISTORY.forEach(draw => {
+      const matches = countMatches(ticket.nums, draw.nums);
+      if (matches === 6) {
+        status = 'repetida';
+        statusLabel = '● Repetida';
+        bestMatch = 6;
+        bestDrawId = draw.id || draw.concurso;
+        bestDrawNums = draw.nums;
+      } else if (matches >= 3 && status !== 'repetida') {
+        status = 'parcial';
+        statusLabel = `● Parcial`;
+        if (matches > bestMatch) {
+          bestMatch = matches;
+          bestDrawId = draw.id || draw.concurso;
+          bestDrawNums = draw.nums;
+        }
+      }
+    });
+
+    const card = document.createElement('div');
+    card.className = 'virgin-card';
+
+    const numsHtml = ticket.nums.map(n => {
+      const isMatch = bestDrawNums.includes(n);
+      return `<div class="vc-n${isMatch && bestMatch >= 3 ? ' match' : ''}">${n}</div>`;
+    }).join('');
+
+    let detail = '';
+    if (status === 'virgen') {
+      detail = 'Sin coincidencias exactas en los últimos sorteos registrados.';
+    } else if (status === 'parcial') {
+      detail = `Mejor: <strong>${bestMatch} aciertos</strong> en sorteo #${bestDrawId}. Los números en rojo coincidieron.`;
+    } else {
+      detail = `⚠ Combinación exacta encontrada en sorteo #${bestDrawId}.`;
+    }
+
+    card.innerHTML = `
+      <div class="vc-header">
+        <span class="vc-name">${ticket.name}</span>
+        <span class="vc-badge ${status}">${statusLabel}</span>
+      </div>
+      <div class="vc-nums">${numsHtml}</div>
+      <div class="vc-detail">${detail}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
 </script>
 
 <!-- ════ BOTTOM NAV (mobile) ════ -->
@@ -2689,9 +2881,9 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="stat-label">Listos</div>
       </div>
     </div>
-    <!-- Mobile sync button in sheet -->
-    <button class="btn-primary" style="width:100%;margin-top:12px;justify-content:center;" onclick="syncData()">
-      🔄 Sincronizar Datos
+    <!-- Mobile copy tickets button -->
+    <button class="btn-primary" style="width:100%;margin-top:12px;justify-content:center;background:var(--bg3);color:var(--text2);border:1px solid var(--border2);" onclick="copyTickets()">
+      📋 Copiar Boletos
     </button>
     <div id="sheetDataBadge" style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);text-align:center;margin-top:6px;"></div>
   </div>
