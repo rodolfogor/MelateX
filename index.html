@@ -1290,6 +1290,153 @@ body {
   #content-historial > div { grid-template-columns: 1fr !important; }
 }
 
+
+/* ── ANALYSIS: Position selector tabs ──────────────── */
+.pos-sel-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 1px;
+}
+.pos-sel-btn:hover { border-color: var(--red); color: var(--text2); }
+.pos-sel-btn.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+  box-shadow: 0 0 10px rgba(232,0,29,0.3);
+}
+
+/* ── Directional card ──────────────────────────────── */
+.dir-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.dir-stat {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px;
+  text-align: center;
+}
+.dir-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.dir-stat-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+
+.dir-arrow-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px;
+  text-align: center;
+  grid-column: span 3;
+}
+.dir-arrow {
+  font-size: 32px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 4px;
+}
+.dir-arrow.up { color: var(--green); }
+.dir-arrow.down { color: var(--red); }
+.dir-trend-txt { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.dir-trend-txt.up { color: var(--green); }
+.dir-trend-txt.down { color: var(--red); }
+.dir-sub { font-size: 11px; color: var(--text3); }
+
+.dir-ma-bar-wrap { grid-column: span 3; }
+.dir-ma-title { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.dir-ma-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.dir-ma-label { font-size: 10px; color: var(--text3); width: 80px; flex-shrink: 0; }
+.dir-ma-bg { flex: 1; height: 6px; background: var(--bg5); border-radius: 3px; overflow: hidden; }
+.dir-ma-fill { height: 100%; border-radius: 3px; background: var(--red); transition: width 0.4s; }
+.dir-ma-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); width: 28px; text-align: right; }
+
+/* ── Markov matrix ─────────────────────────────────── */
+.markov-wrap { overflow-x: auto; margin-bottom: 4px; }
+.markov-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  min-width: 420px;
+}
+.markov-table th {
+  padding: 5px 7px;
+  color: var(--text3);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 9px;
+}
+.markov-table td {
+  padding: 6px 7px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.markov-table tr:hover td { background: var(--bg3); }
+.mk-prev { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text); }
+.mk-next-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.mk-chip {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mk-chip:hover { transform: scale(1.1); }
+.mk-chip.rank1 { background: rgba(232,0,29,0.15); border-color: rgba(232,0,29,0.4); color: #FF9090; }
+.mk-chip.rank2 { background: rgba(255,184,0,0.1); border-color: rgba(255,184,0,0.3); color: var(--gold); }
+.mk-chip.rank3 { background: rgba(0,200,83,0.1); border-color: rgba(0,200,83,0.3); color: var(--green); }
+.mk-chip.rank4 { background: var(--bg4); border-color: var(--border); color: var(--text3); }
+
+/* ── Delta chart ────────────────────────────────────── */
+.delta-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.delta-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.delta-gap-lbl { font-size: 10px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.delta-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.delta-bar-col { display: flex; flex-direction: column-reverse; gap: 2px; height: 60px; justify-content: flex-start; }
+.delta-bar-seg { width: 18px; border-radius: 2px; }
+.delta-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--text2); }
+.delta-common { font-size: 9px; color: var(--text3); margin-top: 4px; }
+.delta-range-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.delta-range-lbl { font-size: 10px; color: var(--text3); width: 60px; flex-shrink: 0; }
+.delta-range-bg { flex: 1; height: 5px; background: var(--bg5); border-radius: 3px; overflow: hidden; }
+.delta-range-fill { height: 100%; border-radius: 3px; background: var(--red); }
+.delta-range-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text2); width: 30px; }
+
+@media (max-width: 768px) {
+  .dir-card { grid-template-columns: 1fr 1fr; }
+  .dir-arrow-box, .dir-ma-bar-wrap { grid-column: span 2; }
+  .delta-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 </style>
 </head>
 <body>
@@ -1467,10 +1614,42 @@ body {
 
     <!-- TAB: ANÁLISIS -->
     <div class="tab-content" id="content-analisis">
-      <div class="section-title">Probabilidad por Posición</div>
-      <div class="pos-prob-grid" id="posProbGrid" style="margin-bottom:20px;"></div>
 
-      <div class="analysis-grid">
+      <!-- ── SECTION 1: Direccionalidad con flechas ────────────────── -->
+      <div class="section-title" style="margin-bottom:12px;">📐 Direccionalidad por Posición</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        Toca una casilla para ver la tendencia media móvil y el rango esperado del siguiente número.
+      </p>
+
+      <!-- Selector de posición interactivo -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;" id="posTabs">
+        <button class="pos-sel-btn active" data-pos="0" onclick="selectPosTab(this,0)">P1</button>
+        <button class="pos-sel-btn" data-pos="1" onclick="selectPosTab(this,1)">P2</button>
+        <button class="pos-sel-btn" data-pos="2" onclick="selectPosTab(this,2)">P3</button>
+        <button class="pos-sel-btn" data-pos="3" onclick="selectPosTab(this,3)">P4</button>
+        <button class="pos-sel-btn" data-pos="4" onclick="selectPosTab(this,4)">P5</button>
+        <button class="pos-sel-btn" data-pos="5" onclick="selectPosTab(this,5)">P6</button>
+      </div>
+
+      <!-- Directional card -->
+      <div class="dir-card" id="dirCard"></div>
+
+      <!-- ── SECTION 2: Matriz de Markov ────────────────────────────── -->
+      <div class="section-title" style="margin-top:20px;margin-bottom:12px;">🔗 Matriz Subsecuente (Markov)</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        Si el número X salió en P<em>n</em> del sorteo anterior, estos son los más frecuentes en P<em>n</em> del siguiente sorteo.
+      </p>
+      <div class="markov-wrap" id="markovGrid"></div>
+
+      <!-- ── SECTION 3: Filtro de Deltas ────────────────────────────── -->
+      <div class="section-title" style="margin-top:20px;margin-bottom:12px;">📏 Filtro de Deltas (Espaciamiento)</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
+        Distribución de las diferencias entre posiciones consecutivas en los últimos sorteos. Un boleto sano respeta estos intervalos.
+      </p>
+      <div id="deltaChart" style="margin-bottom:16px;"></div>
+
+      <!-- ── SECTION 4: Existente — frecuencia y caliente/frío ──────── -->
+      <div class="analysis-grid" style="margin-top:4px;">
         <div class="analysis-card">
           <div class="analysis-card-title">Frecuencia histórica (25 sorteos)</div>
           <div class="position-bars" id="freqBars"></div>
@@ -1485,8 +1664,8 @@ body {
         </div>
       </div>
 
-      <div class="section-title">Direccionalidad por Posición</div>
-      <div id="directionalityTable" style="margin-bottom:20px;"></div>
+      <!-- Directionality legacy table kept for reference -->
+      <div id="directionalityTable" style="margin-bottom:20px;display:none;"></div>
     </div>
 
     <!-- TAB: HISTORIAL -->
@@ -1896,6 +2075,12 @@ function renderGrid() {
     
     if(activeLayers.has('pool') && POOL.has(n)) {
       cell.classList.add('pool');
+    }
+
+    // Directional pool — lit green when a position is selected in Analysis tab
+    if(DIRECTIONAL_POOL.size > 0 && DIRECTIONAL_POOL.has(n) && !cell.classList.contains('pool')) {
+      cell.classList.add('pool'); // reuse pool green styling
+      cell.title = `Candidato direccional P${currentDirPos + 1}`;
     }
 
     let isNatural = false;
@@ -2415,6 +2600,12 @@ function switchTab(id) {
   // Sidebar only visible on Jugadas tab
   document.querySelector('.app-body').classList.toggle('sidebar-hidden', id !== 'jugadas');
   if (id === 'historial') renderVirginityCheck();
+  if (id === 'analisis') renderAnalysis();
+  // Clear directional pool highlight when navigating away from analysis
+  if (id !== 'analisis' && DIRECTIONAL_POOL.size > 0) {
+    DIRECTIONAL_POOL = new Set();
+    renderGrid();
+  }
 }
 
 // ============================================================
@@ -2842,6 +3033,576 @@ function renderVirginityCheck() {
     container.appendChild(card);
   });
 }
+
+
+// ════════════════════════════════════════════════════════════════════
+// ALGORITHM 1 — MOVING AVERAGE DIRECTIONALITY
+// ════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════
+// DIRECTIONAL POOL — numbers lit green on the grid when active
+// ════════════════════════════════════════════════════════════════════
+let DIRECTIONAL_POOL = new Set(); // números candidatos por direccionalidad activa
+
+// ════════════════════════════════════════════════════════════════════
+// ALGORITHM 1 (REWRITTEN) — LOTE-BASED TRANSITION DIRECTIONALITY
+// ════════════════════════════════════════════════════════════════════
+// Logic:
+//   1. Identify current next-draw's lote (same as updateCalculatedData).
+//   2. From HISTORY, extract all draws that belong to the SAME lote.
+//   3. For the reference number (the last number that appeared in Ppos
+//      of the most-recent same-lote draw), count how many times the
+//      FOLLOWING same-lote draw had a HIGHER, LOWER, or EQUAL number
+//      in that same position.
+//   4. Build a ranked candidate list of specific "next" numbers weighted
+//      by their transition frequency.
+//   5. Trend arrow = whichever direction won the majority vote.
+
+function computeLoteDirectionality(pos) {
+  if (HISTORY.length < 4) return null;
+
+  const nextId   = HISTORY[0].id + 1;
+  const nextLot  = getLot(nextId);
+
+  // All draws of this lote, sorted newest-first (already sorted by id desc)
+  const loteDraws = HISTORY.filter(h => getLot(h.id) === nextLot);
+
+  if (loteDraws.length < 3) {
+    // Fallback: use all draws if lote has fewer than 3 entries
+    return computeFallbackDirectionality(pos);
+  }
+
+  // Reference: the most recent lote draw gives us the "previous" number for Ppos
+  const refNum = loteDraws[0].nums[pos];
+
+  // Walk pairs: loteDraws[i+1] was previous, loteDraws[i] came next
+  let higher = 0, lower = 0, equal = 0;
+  const transitionMap = {}; // nextNum → count (when prevNum === refNum or close)
+
+  for (let i = 0; i < loteDraws.length - 1; i++) {
+    const prevDraw = loteDraws[i + 1]; // older
+    const nextDraw = loteDraws[i];     // the draw that followed
+    const prevNum  = prevDraw.nums[pos];
+    const nextNum  = nextDraw.nums[pos];
+    if (!prevNum || !nextNum) continue;
+
+    // Count direction transitions for prevNum === refNum (exact match)
+    if (prevNum === refNum) {
+      if (nextNum > prevNum)      higher++;
+      else if (nextNum < prevNum) lower++;
+      else                        equal++;
+      transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 2; // double weight exact match
+    }
+
+    // Also accumulate a general direction vote for ALL transitions in this pos
+    if (nextNum > prevNum)      higher += 0.4;
+    else if (nextNum < prevNum) lower  += 0.4;
+    else                        equal  += 0.2;
+
+    // Record transitions for candidate building
+    transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 1;
+  }
+
+  const total = higher + lower + equal;
+  const pctUp    = total > 0 ? Math.round(higher / total * 100) : 0;
+  const pctDown  = total > 0 ? Math.round(lower  / total * 100) : 0;
+  const pctEqual = total > 0 ? Math.round(equal  / total * 100) : 0;
+
+  const trend = (higher >= lower && higher >= equal) ? 'up'
+              : (lower  >= higher && lower  >= equal) ? 'down'
+              : 'equal';
+
+  // Candidate numbers: ranked by transition frequency, filtered by direction
+  const allCandidates = Object.entries(transitionMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([n, c]) => ({ num: +n, count: c }));
+
+  // Direction-filtered pool: numbers consistent with the trend
+  const dirPool = allCandidates
+    .filter(c => {
+      if (trend === 'up')    return c.num > refNum;
+      if (trend === 'down')  return c.num < refNum;
+      return true;
+    })
+    .slice(0, 8)
+    .map(c => c.num);
+
+  // Stats
+  const vals = loteDraws.map(h => h.nums[pos]).filter(Boolean);
+  const avg  = Math.round(vals.reduce((s, n) => s + n, 0) / vals.length * 10) / 10;
+  const variance = vals.reduce((s, n) => s + (n - avg) ** 2, 0) / vals.length;
+  const stddev = Math.round(Math.sqrt(variance) * 10) / 10;
+
+  // Threshold: pivot point for the text label
+  const trendThreshold = refNum;
+
+  return {
+    pos, refNum, trend, trendThreshold,
+    pctUp, pctDown, pctEqual,
+    loteSize: loteDraws.length,
+    loteId: nextLot,
+    avg, stddev,
+    dirPool,
+    topCandidates: allCandidates.slice(0, 6),
+    recentNums: loteDraws.slice(0, 4).map(h => h.nums[pos]).filter(Boolean)
+  };
+}
+
+function computeFallbackDirectionality(pos) {
+  // Uses all history when lote data is insufficient
+  const draws = HISTORY.slice(0, 25);
+  if (draws.length < 3) return null;
+
+  const refNum = draws[0].nums[pos];
+  let higher = 0, lower = 0, equal = 0;
+  const transitionMap = {};
+
+  for (let i = 0; i < draws.length - 1; i++) {
+    const prevNum = draws[i + 1].nums[pos];
+    const nextNum = draws[i].nums[pos];
+    if (!prevNum || !nextNum) continue;
+    if (nextNum > prevNum)      higher++;
+    else if (nextNum < prevNum) lower++;
+    else                        equal++;
+    if (prevNum === refNum) {
+      transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 2;
+    }
+    transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 1;
+  }
+
+  const total   = higher + lower + equal || 1;
+  const pctUp   = Math.round(higher / total * 100);
+  const pctDown = Math.round(lower  / total * 100);
+  const pctEq   = Math.round(equal  / total * 100);
+  const trend   = higher >= lower ? 'up' : 'down';
+
+  const allCandidates = Object.entries(transitionMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([n, c]) => ({ num: +n, count: c }));
+
+  const dirPool = allCandidates
+    .filter(c => trend === 'up' ? c.num > refNum : c.num < refNum)
+    .slice(0, 8).map(c => c.num);
+
+  const vals   = draws.map(h => h.nums[pos]).filter(Boolean);
+  const avg    = Math.round(vals.reduce((s, n) => s + n, 0) / vals.length * 10) / 10;
+  const stddev = Math.round(Math.sqrt(vals.reduce((s, n) => s + (n - avg) ** 2, 0) / vals.length) * 10) / 10;
+
+  return {
+    pos, refNum, trend, trendThreshold: refNum,
+    pctUp, pctDown, pctEqual: pctEq,
+    loteSize: draws.length, loteId: '(todos)',
+    avg, stddev, dirPool,
+    topCandidates: allCandidates.slice(0, 6),
+    recentNums: draws.slice(0, 4).map(h => h.nums[pos]).filter(Boolean)
+  };
+}
+
+let currentDirPos = 0;
+
+function selectPosTab(btn, pos) {
+  document.querySelectorAll('.pos-sel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDirPos = pos;
+  renderDirCard(pos);
+  renderMarkov(); // also refresh Markov for this position
+}
+
+function renderDirCard(pos) {
+  const card = document.getElementById('dirCard');
+  if (!card) return;
+
+  const s = computeLoteDirectionality(pos);
+  if (!s) {
+    card.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:16px;">Sin datos suficientes. Importa resultados reales para activar el análisis por lote.</div>';
+    DIRECTIONAL_POOL = new Set();
+    return;
+  }
+
+  // Update the directional pool and re-render the grid to light up green candidates
+  DIRECTIONAL_POOL = new Set(s.dirPool);
+  // Refresh grid so directional pool cells light up green immediately
+  if (typeof renderGrid === 'function') renderGrid();
+
+  const arrowSymbol = s.trend === 'up' ? '↑' : (s.trend === 'down' ? '↓' : '→');
+  const arrowClass  = s.trend === 'up' ? 'up' : (s.trend === 'down' ? 'down' : '');
+  const trendLabel  = s.trend === 'up'
+    ? `Tendencia: Se espera un número MAYOR a ${s.trendThreshold}`
+    : s.trend === 'down'
+      ? `Tendencia: Se espera un número MENOR a ${s.trendThreshold}`
+      : `Sin tendencia clara para P${pos + 1}`;
+
+  const pctBarUp   = s.pctUp   + '%';
+  const pctBarDown = s.pctDown + '%';
+  const pctBarEq   = s.pctEqual + '%';
+
+  card.innerHTML = `
+    <div class="dir-stat">
+      <div class="dir-stat-val">${s.refNum}</div>
+      <div class="dir-stat-lbl">Número anterior</div>
+    </div>
+    <div class="dir-stat">
+      <div class="dir-stat-val">${s.avg}</div>
+      <div class="dir-stat-lbl">Promedio lote ${s.loteId}</div>
+    </div>
+    <div class="dir-stat">
+      <div class="dir-stat-val">${s.loteSize}</div>
+      <div class="dir-stat-lbl">Sorteos del lote</div>
+    </div>
+
+    <div class="dir-arrow-box">
+      <span class="dir-arrow ${arrowClass}">${arrowSymbol}</span>
+      <div class="dir-trend-txt ${arrowClass}">${trendLabel}</div>
+      <div class="dir-sub" style="margin-top:6px;">
+        Basado en las transiciones del <strong>Lote ${s.loteId}</strong> (${s.loteSize} sorteos)
+        &nbsp;·&nbsp; Desv. estándar: ${s.stddev}
+      </div>
+
+      <!-- Direction vote bars -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:22px;color:var(--green);font-weight:700;">${s.pctUp}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
+            <div style="height:100%;width:${pctBarUp};background:var(--green);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);">↑ Sube</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:22px;color:var(--red);font-weight:700;">${s.pctDown}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
+            <div style="height:100%;width:${pctBarDown};background:var(--red);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);">↓ Baja</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:22px;color:var(--text2);font-weight:700;">${s.pctEqual}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
+            <div style="height:100%;width:${pctBarEq};background:var(--text3);border-radius:2px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);">→ Igual</div>
+        </div>
+      </div>
+
+      <!-- Sorteos recientes del lote -->
+      <div style="margin-top:10px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:10px;color:var(--text3);">Últimos en lote P${pos+1}:</span>
+        ${s.recentNums.map(n => `<span style="background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 9px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text)">${n}</span>`).join(' → ')}
+      </div>
+    </div>
+
+    <!-- Pool verde candidato -->
+    <div class="dir-ma-bar-wrap">
+      <div class="dir-ma-title">🟢 Pool Direccional — candidatos iluminados en la cuadrícula</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+        ${s.dirPool.length > 0
+          ? s.dirPool.map(n => `<span onclick="quickSelectNum(${n})" style="cursor:pointer;background:rgba(0,200,83,0.15);border:1.5px solid var(--green);color:var(--green);border-radius:5px;padding:3px 9px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;" title="Agregar ${n}">${n}</span>`).join('')
+          : '<span style="color:var(--text3);font-size:11px;">Sin candidatos con datos actuales</span>'}
+      </div>
+      <div class="dir-ma-title" style="margin-top:8px;">Top transiciones desde ${s.refNum} en P${pos+1}</div>
+      ${s.topCandidates.map((c, i) => {
+        const w = Math.round(c.count / (s.topCandidates[0]?.count || 1) * 100);
+        const col = i === 0 ? 'var(--red)' : i === 1 ? 'var(--gold)' : 'var(--green)';
+        return `<div class="dir-ma-bar-row">
+          <span class="dir-ma-label" style="cursor:pointer;color:${col}" onclick="quickSelectNum(${c.num})">${c.num} ↗</span>
+          <div class="dir-ma-bg"><div class="dir-ma-fill" style="width:${w}%;background:${col}"></div></div>
+          <span class="dir-ma-val">${c.count}x</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ALGORITHM 2 — MARKOV TRANSITION MATRIX
+// ════════════════════════════════════════════════════════════════════
+
+function computeMarkov() {
+  // For each position pos, build: prevNum → {nextNum: count}
+  const analysisHistory = HISTORY.slice(0, 25);
+  if (analysisHistory.length < 4) return null;
+
+  // Result: array[6] of Map(prevNum → [{num, count}])
+  const matrices = Array.from({length: 6}, () => new Map());
+
+  for (let i = 0; i < analysisHistory.length - 1; i++) {
+    const prev = analysisHistory[i + 1]; // older draw
+    const curr = analysisHistory[i];     // newer draw (what came after)
+    for (let pos = 0; pos < 6; pos++) {
+      const prevNum = prev.nums[pos];
+      const currNum = curr.nums[pos];
+      if (!prevNum || !currNum) continue;
+      if (!matrices[pos].has(prevNum)) matrices[pos].set(prevNum, new Map());
+      const inner = matrices[pos].get(prevNum);
+      inner.set(currNum, (inner.get(currNum) || 0) + 1);
+    }
+  }
+
+  // Convert to sorted arrays
+  return matrices.map(mat => {
+    const result = [];
+    mat.forEach((inner, prevNum) => {
+      const sorted = [...inner.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
+      result.push({prevNum, nexts: sorted.map(([num, count]) => ({num, count}))});
+    });
+    return result.sort((a, b) => b.nexts[0]?.count - a.nexts[0]?.count);
+  });
+}
+
+function renderMarkov() {
+  const el = document.getElementById('markovGrid');
+  if (!el) return;
+  const data = computeMarkov();
+  if (!data) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;">Sin datos suficientes.</div>';
+    return;
+  }
+
+  // Show the current position's transitions (use currentDirPos)
+  const pos = currentDirPos;
+  const posData = data[pos].slice(0, 8); // top 8 predecessors
+
+  const ranks = ['rank1','rank2','rank3','rank4'];
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">
+      Mostrando transiciones para <strong style="color:var(--red)">P${pos+1}</strong>.
+      Selecciona otra posición arriba para cambiar la vista.
+    </div>
+    <table class="markov-table">
+      <thead>
+        <tr>
+          <th>Nº anterior en P${pos+1}</th>
+          <th>Más frecuentes en P${pos+1} del sorteo siguiente</th>
+          <th>Veces</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${posData.map(row => `
+          <tr>
+            <td class="mk-prev">${row.prevNum}</td>
+            <td>
+              <div class="mk-next-chips">
+                ${row.nexts.map((n, i) => `
+                  <span class="mk-chip ${ranks[i]}" onclick="quickSelectNum(${n.num})" title="Agregar ${n.num} a la selección">
+                    ${n.num}
+                  </span>
+                `).join('')}
+              </div>
+            </td>
+            <td style="color:var(--text3);font-size:10px;">${row.nexts[0]?.count || 0}x</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;">
+      💡 Toca cualquier número del cuadro para agregarlo directamente a la selección actual.
+    </div>
+  `;
+}
+
+function quickSelectNum(n) {
+  if (currentSelection.includes(n)) return;
+  if (currentSelection.length >= 6) { showNotif('Máximo 6 números', 'warning'); return; }
+  currentSelection.push(n);
+  currentSelection.sort((a, b) => a - b);
+  switchTab('jugadas');
+  renderGrid();
+  updateHealth();
+  showNotif(`✅ ${n} agregado desde Markov`, 'success');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ALGORITHM 3 — DELTA FILTER (inter-position spacing)
+// ════════════════════════════════════════════════════════════════════
+
+function computeDeltas() {
+  const analysisHistory = HISTORY.slice(0, 25);
+  if (analysisHistory.length === 0) return null;
+
+  // For each gap (P1→P2, P2→P3, ..., P5→P6): collect all deltas
+  const gaps = Array.from({length: 5}, (_, g) => {
+    const deltas = analysisHistory
+      .map(h => h.nums[g + 1] - h.nums[g])
+      .filter(d => d > 0);
+    const avg = deltas.reduce((s, d) => s + d, 0) / (deltas.length || 1);
+    const min = Math.min(...deltas);
+    const max = Math.max(...deltas);
+    // Most common delta
+    const freq = {};
+    deltas.forEach(d => freq[d] = (freq[d] || 0) + 1);
+    const mode = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
+    return {
+      label: `P${g+1}→P${g+2}`,
+      avg: Math.round(avg * 10) / 10,
+      min, max,
+      mode: mode ? +mode[0] : 0,
+      modeCount: mode ? +mode[1] : 0,
+      deltas,
+      freq
+    };
+  });
+  return gaps;
+}
+
+function validateDeltas(nums) {
+  // Returns per-gap validation for a 6-number ticket
+  if (nums.length !== 6) return [];
+  const gaps = computeDeltas();
+  if (!gaps) return [];
+  return gaps.map((g, i) => {
+    const actual = nums[i + 1] - nums[i];
+    const ok = actual >= g.min && actual <= g.max;
+    const warn = actual < Math.round(g.avg * 0.5) || actual > Math.round(g.avg * 2);
+    return {gap: g.label, actual, avg: g.avg, min: g.min, max: g.max, ok, warn};
+  });
+}
+
+function renderDeltaChart() {
+  const el = document.getElementById('deltaChart');
+  if (!el) return;
+  const gaps = computeDeltas();
+  if (!gaps) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;">Sin datos suficientes.</div>';
+    return;
+  }
+  const maxAvg = Math.max(...gaps.map(g => g.avg));
+
+  el.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">
+        Intervalo promedio entre posiciones
+      </div>
+      ${gaps.map(g => `
+        <div class="delta-range-row">
+          <span class="delta-range-lbl">${g.label}</span>
+          <div class="delta-range-bg">
+            <div class="delta-range-fill" style="width:${Math.round(g.avg / maxAvg * 100)}%"></div>
+          </div>
+          <span class="delta-range-val">Ø ${g.avg}</span>
+          <span style="font-size:9px;color:var(--text3);margin-left:6px;">[${g.min}–${g.max}]</span>
+          <span style="font-size:9px;color:var(--gold);margin-left:6px;">Moda: ${g.mode} (${g.modeCount}x)</span>
+        </div>
+      `).join('')}
+      <div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.6;">
+        📌 Un boleto saludable tiene deltas dentro del rango <strong>[mín–máx]</strong> de cada intervalo.
+        La <strong style="color:var(--gold)">Moda</strong> es el espaciado que más se repite históricamente.
+      </div>
+    </div>
+
+    <!-- Current ticket delta validation -->
+    <div id="deltaValidation" style="margin-top:10px;"></div>
+  `;
+  renderDeltaValidation();
+}
+
+function renderDeltaValidation() {
+  const el = document.getElementById('deltaValidation');
+  if (!el) return;
+  if (currentSelection.length !== 6) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--text3);padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;">
+      Selecciona 6 números para validar los deltas de tu boleto actual.
+    </div>`;
+    return;
+  }
+  const v = validateDeltas(currentSelection);
+  el.innerHTML = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">
+        Validación de deltas — boleto actual: ${currentSelection.join(' · ')}
+      </div>
+      ${v.map(gap => `
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;">
+          <span style="color:var(--text3);width:70px;flex-shrink:0">${gap.gap}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${gap.warn ? 'var(--red)' : gap.ok ? 'var(--green)' : 'var(--gold)'}">${gap.actual}</span>
+          <span style="color:var(--text3);flex:1">vs. rango [${gap.min}–${gap.max}], Ø${gap.avg}</span>
+          <span>${gap.warn ? '⚠' : gap.ok ? '✅' : '🟡'}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PATCH renderAnalysis to call new renderers
+// ════════════════════════════════════════════════════════════════════
+
+function renderAnalysis() {
+  // Position probability grid (legacy — kept for directionality context)
+  // Removed from view but still computed
+  const grid = document.getElementById('posProbGrid');
+  if (grid) { grid.innerHTML = ''; }
+
+  // Frequency bars
+  const freqBars = document.getElementById('freqBars');
+  if (freqBars) {
+    freqBars.innerHTML = '';
+    const topFreq = sorted.slice(0, 15);
+    const maxF = topFreq[0] ? topFreq[0][1] : 1;
+    topFreq.forEach(([num, freq]) => {
+      const row = document.createElement('div');
+      row.className = 'pos-row';
+      row.innerHTML = `
+        <span class="pos-label">${num}</span>
+        <div class="pos-bar-bg">
+          <div class="pos-bar-fill" style="width:${Math.round(freq/maxF*100)}%;background:${HOT.has(+num)?'var(--red)':'var(--text3)'}"></div>
+        </div>
+        <span class="pos-nums">${freq}x</span>
+      `;
+      freqBars.appendChild(row);
+    });
+  }
+
+  // Hot/cold chart
+  const hcEl = document.getElementById('hotColdChart');
+  if (hcEl) {
+    hcEl.innerHTML = '';
+    const hotArr = sorted.slice(0,8);
+    const coldArr = sorted.slice(-8).reverse();
+    const makeRow = (label, arr, color) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-bottom:8px;';
+      div.innerHTML = `
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;">${label}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          ${arr.map(([n,f]) => `
+            <span style="background:${color}22;border:1px solid ${color}55;color:${color};border-radius:4px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:11px;">${n} <small style="opacity:0.6">${f}</small></span>
+          `).join('')}
+        </div>
+      `;
+      hcEl.appendChild(div);
+    };
+    makeRow('🔴 Calientes', hotArr, '#FF4444');
+    makeRow('🔵 Fríos', coldArr, '#4A9EFF');
+  }
+
+  // Debt map
+  const debtEl = document.getElementById('debtMap');
+  if (debtEl) {
+    debtEl.innerHTML = '';
+    for(let n=1; n<=39; n++) {
+      const d = DEBT[n];
+      const div = document.createElement('div');
+      const intensity = Math.min(1, d / 15);
+      div.style.cssText = `background:rgba(255,184,0,${intensity});border-radius:3px;font-size:9px;padding:4px 0;text-align:center;color:${intensity > 0.5 ? '#000' : 'var(--text2)'};`;
+      div.textContent = n;
+      debtEl.appendChild(div);
+    }
+  }
+
+  // NEW: 3 algorithms
+  renderDirCard(currentDirPos);
+  renderMarkov();
+  renderDeltaChart();
+}
+
+// Also call renderDeltaValidation when the analysis tab is opened and selection changes
+const _origUpdateHealth = updateHealth;
+updateHealth = function() {
+  _origUpdateHealth.apply(this, arguments);
+  if (document.getElementById('tab-analisis')?.classList.contains('active')) {
+    renderDeltaValidation();
+  }
+};
 
 </script>
 
