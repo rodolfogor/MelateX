@@ -1800,7 +1800,7 @@ function getLot(id) {
 
 function updateCalculatedData() {
   // Limitamos el análisis a los últimos 25 sorteos para detectar tendencias actuales
-  const analysisHistory = HISTORY.slice(0, 25);
+  const analysisHistory = HISTORY.slice(0, 200);
   const totalHistory = analysisHistory.length || 1;
 
   // Frecuencias
@@ -3150,7 +3150,7 @@ function computeLoteDirectionality(pos) {
 
 function computeFallbackDirectionality(pos) {
   // Uses all history when lote data is insufficient
-  const draws = HISTORY.slice(0, 25);
+  const draws = HISTORY.slice(0, 200);
   if (draws.length < 3) return null;
 
   const refNum = draws[0].nums[pos];
@@ -3198,6 +3198,152 @@ function computeFallbackDirectionality(pos) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════════
+// ALGORITHM 1-B — IMMEDIATE MATRIX (consecutive-draw transitions)
+// Same shape as computeLoteDirectionality but uses EVERY consecutive
+// pair in the last 25 draws, regardless of lote.
+// ════════════════════════════════════════════════════════════════════
+function computeImmediateDirectionality(pos) {
+  const draws = HISTORY.slice(0, 200);
+  if (draws.length < 4) return null;
+
+  const refNum = draws[0].nums[pos]; // most-recent draw's number for this pos
+  let higher = 0, lower = 0, equal = 0;
+  const transitionMap = {};
+
+  for (let i = 0; i < draws.length - 1; i++) {
+    const prevNum = draws[i + 1].nums[pos]; // older
+    const nextNum = draws[i].nums[pos];     // newer (what came next)
+    if (!prevNum || !nextNum) continue;
+
+    // General direction vote
+    if (nextNum > prevNum)      higher += 1;
+    else if (nextNum < prevNum) lower  += 1;
+    else                        equal  += 0.5;
+
+    // Extra weight when prevNum matches the reference
+    if (prevNum === refNum) {
+      if (nextNum > prevNum)      higher += 2;
+      else if (nextNum < prevNum) lower  += 2;
+      else                        equal  += 1;
+      transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 3;
+    }
+    transitionMap[nextNum] = (transitionMap[nextNum] || 0) + 1;
+  }
+
+  const total  = higher + lower + equal || 1;
+  const pctUp  = Math.round(higher / total * 100);
+  const pctDown= Math.round(lower  / total * 100);
+  const pctEq  = Math.round(equal  / total * 100);
+  const trend  = (higher >= lower && higher >= equal) ? 'up'
+               : (lower >= higher && lower >= equal)  ? 'down'
+               : 'equal';
+
+  const allCandidates = Object.entries(transitionMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([n, c]) => ({ num: +n, count: c }));
+
+  const dirPool = allCandidates
+    .filter(c => trend === 'up' ? c.num > refNum : trend === 'down' ? c.num < refNum : true)
+    .slice(0, 8).map(c => c.num);
+
+  return { pos, refNum, trend, pctUp, pctDown, pctEqual: pctEq,
+           dirPool, topCandidates: allCandidates.slice(0, 6),
+           source: 'inmediato', drawCount: draws.length };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CROSS-MATRIX ENGINE
+// Takes lote-matrix result (sL) and immediate-matrix result (sI).
+// Returns a combined signal object used by renderDirCard.
+// ════════════════════════════════════════════════════════════════════
+function crossMatrices(sL, sI) {
+  if (!sL && !sI) return null;
+  if (!sL) return { ...sI, signal: 'single', arrowGlyph: sI.trend === 'up' ? '↑' : sI.trend === 'down' ? '↓' : '↔', arrowClass: sI.trend === 'up' ? 'up' : sI.trend === 'down' ? 'down' : '', pool: sI.dirPool, poolStrength: 'normal' };
+  if (!sI) return { ...sL, signal: 'single', arrowGlyph: sL.trend === 'up' ? '↑' : sL.trend === 'down' ? '↓' : '↔', arrowClass: sL.trend === 'up' ? 'up' : sL.trend === 'down' ? 'down' : '', pool: sL.dirPool, poolStrength: 'normal' };
+
+  const agree = sL.trend !== 'equal' && sI.trend !== 'equal' && sL.trend === sI.trend;
+  const contradict = sL.trend !== 'equal' && sI.trend !== 'equal' && sL.trend !== sI.trend;
+
+  let signal, arrowGlyph, arrowClass, pool, poolStrength;
+  let combinedUp   = Math.round((sL.pctUp   * 0.55 + sI.pctUp   * 0.45));
+  let combinedDown = Math.round((sL.pctDown * 0.55 + sI.pctDown * 0.45));
+  let combinedEq   = Math.round((sL.pctEqual* 0.55 + sI.pctEqual* 0.45));
+
+  if (agree) {
+    // ↑↑ or ↓↓ — reinforced signal
+    signal      = 'agree';
+    arrowGlyph  = sL.trend === 'up' ? '↑↑' : '↓↓';
+    arrowClass  = sL.trend === 'up' ? 'up' : 'down';
+    poolStrength = 'strong';
+
+    // Intersection of both pools — numbers both matrices agree on
+    const lSet = new Set(sL.dirPool);
+    const iSet = new Set(sI.dirPool);
+    const intersection = sL.dirPool.filter(n => iSet.has(n));
+    // If intersection is thin, union the top candidates weighted by combined score
+    if (intersection.length >= 3) {
+      pool = intersection;
+    } else {
+      // Score each candidate: sum of its count in both topCandidates lists
+      const scoreMap = {};
+      sL.topCandidates.forEach((c, i) => { scoreMap[c.num] = (scoreMap[c.num] || 0) + c.count * 0.55; });
+      sI.topCandidates.forEach((c, i) => { scoreMap[c.num] = (scoreMap[c.num] || 0) + c.count * 0.45; });
+      pool = Object.entries(scoreMap)
+        .sort((a, b) => b[1] - a[1])
+        .map(([n]) => +n)
+        .filter(n => lSet.has(n) || iSet.has(n))
+        .slice(0, 8);
+    }
+
+  } else if (contradict) {
+    // ↔ — neutral, open the full fan
+    signal      = 'neutral';
+    arrowGlyph  = '↔';
+    arrowClass  = '';
+    poolStrength = 'wide';
+
+    // Union both pools + extend range: all numbers not yet selected
+    const refNum = sL.refNum;
+    const combined = new Set([...sL.dirPool, ...sI.dirPool]);
+    // Add mid-range numbers as open options
+    const lo = Math.max(1,  refNum - 8);
+    const hi = Math.min(39, refNum + 8);
+    for (let n = lo; n <= hi; n++) combined.add(n);
+    pool = [...combined].sort((a, b) => a - b).slice(0, 12);
+
+  } else {
+    // One matrix is 'equal' — trust the other
+    const dominant = sL.trend !== 'equal' ? sL : sI;
+    signal      = 'single';
+    arrowGlyph  = dominant.trend === 'up' ? '↑' : dominant.trend === 'down' ? '↓' : '↔';
+    arrowClass  = dominant.trend === 'up' ? 'up' : dominant.trend === 'down' ? 'down' : '';
+    pool        = dominant.dirPool;
+    poolStrength = 'normal';
+  }
+
+  // Merge top candidates for display (weighted blend)
+  const mergedMap = {};
+  sL.topCandidates.forEach(c => { mergedMap[c.num] = (mergedMap[c.num] || 0) + c.count * 0.55; });
+  sI.topCandidates.forEach(c => { mergedMap[c.num] = (mergedMap[c.num] || 0) + c.count * 0.45; });
+  const mergedCandidates = Object.entries(mergedMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([n, s]) => ({ num: +n, count: Math.round(s * 10) / 10 }));
+
+  return {
+    pos: sL.pos, refNum: sL.refNum,
+    signal, arrowGlyph, arrowClass,
+    pool, poolStrength,
+    combinedUp, combinedDown, combinedEq,
+    lote: sL, immediate: sI,
+    mergedCandidates,
+    avg: sL.avg, stddev: sL.stddev,
+    loteId: sL.loteId, loteSize: sL.loteSize,
+    recentNums: sL.recentNums
+  };
+}
+
 let currentDirPos = 0;
 
 function selectPosTab(btn, pos) {
@@ -3212,98 +3358,184 @@ function renderDirCard(pos) {
   const card = document.getElementById('dirCard');
   if (!card) return;
 
-  const s = computeLoteDirectionality(pos);
-  if (!s) {
-    card.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:16px;">Sin datos suficientes. Importa resultados reales para activar el análisis por lote.</div>';
+  // Compute both matrices independently
+  const sL = computeLoteDirectionality(pos);
+  const sI = computeImmediateDirectionality(pos);
+
+  // Cross-matrix fusion
+  const cx = crossMatrices(sL, sI);
+
+  if (!cx) {
+    card.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:16px;">Sin datos suficientes. Importa resultados reales.</div>';
     DIRECTIONAL_POOL = new Set();
     return;
   }
 
-  // Update the directional pool and re-render the grid to light up green candidates
-  DIRECTIONAL_POOL = new Set(s.dirPool);
-  // Refresh grid so directional pool cells light up green immediately
+  // Update directional pool from the fused result
+  DIRECTIONAL_POOL = new Set(cx.pool);
   if (typeof renderGrid === 'function') renderGrid();
 
-  const arrowSymbol = s.trend === 'up' ? '↑' : (s.trend === 'down' ? '↓' : '→');
-  const arrowClass  = s.trend === 'up' ? 'up' : (s.trend === 'down' ? 'down' : '');
-  const trendLabel  = s.trend === 'up'
-    ? `Tendencia: Se espera un número MAYOR a ${s.trendThreshold}`
-    : s.trend === 'down'
-      ? `Tendencia: Se espera un número MENOR a ${s.trendThreshold}`
-      : `Sin tendencia clara para P${pos + 1}`;
+  // Signal metadata
+  const signalMeta = {
+    agree:   { label: 'SEÑAL REFORZADA', badge: 'rgba(0,200,83,0.15)', bcolor: 'var(--green)', desc: 'Ambas matrices coinciden. Pool verde reforzado con la intersección.' },
+    neutral: { label: 'SEÑAL NEUTRAL',   badge: 'rgba(255,184,0,0.12)', bcolor: 'var(--gold)', desc: 'Las matrices se contradicen. Se abre el abanico completo de opciones.' },
+    single:  { label: 'SEÑAL SIMPLE',    badge: 'rgba(232,0,29,0.1)',  bcolor: 'var(--red)',  desc: 'Una sola matriz activa. Señal orientativa.' }
+  }[cx.signal];
 
-  const pctBarUp   = s.pctUp   + '%';
-  const pctBarDown = s.pctDown + '%';
-  const pctBarEq   = s.pctEqual + '%';
+  const poolChipStyle = (strength) => {
+    if (strength === 'strong')  return 'background:rgba(0,200,83,0.2);border:2px solid var(--green);color:var(--green);box-shadow:0 0 6px rgba(0,200,83,0.3);';
+    if (strength === 'wide')    return 'background:rgba(255,184,0,0.12);border:1.5px solid var(--gold);color:var(--gold);';
+    return 'background:rgba(0,200,83,0.12);border:1.5px solid var(--green);color:var(--green);';
+  };
+
+  const trendLabel = cx.signal === 'neutral'
+    ? `Tendencia neutral en P${pos+1} — abanico abierto`
+    : cx.arrowClass === 'up'
+      ? `Tendencia: Se espera un número MAYOR a ${cx.refNum}`
+      : `Tendencia: Se espera un número MENOR a ${cx.refNum}`;
+
+  // Individual matrix detail cards — full breakdown for each source
+  const matrixDetailCard = (src, s, colorClass) => {
+    if (!s) return '';
+    const arrow    = s.trend === 'up' ? '↑' : s.trend === 'down' ? '↓' : '→';
+    const color    = s.trend === 'up' ? 'var(--green)' : s.trend === 'down' ? 'var(--red)' : 'var(--text3)';
+    const tLabel   = s.trend === 'up'
+      ? `Número MAYOR a ${s.refNum}`
+      : s.trend === 'down'
+        ? `Número MENOR a ${s.refNum}`
+        : 'Sin tendencia clara';
+    const topNums = (s.dirPool || []).slice(0, 6);
+    const maxCount = s.topCandidates?.[0]?.count || 1;
+    return `
+    <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px;flex:1;min-width:0;">
+      <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">
+        ${src}
+      </div>
+      <!-- Arrow + trend -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:30px;font-weight:700;color:${color};line-height:1;">${arrow}</span>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:${color};">${tLabel}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">
+            ${s.drawCount ?? s.loteSize ?? '—'} sorteos · Ref: <strong style="color:var(--text2)">${s.refNum}</strong>
+          </div>
+        </div>
+      </div>
+      <!-- Vote bars -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;">
+        <div style="text-align:center;">
+          <div style="font-size:15px;font-weight:700;color:var(--green);">${s.pctUp}%</div>
+          <div style="height:3px;background:var(--bg5);border-radius:2px;margin:3px 0;overflow:hidden;"><div style="height:100%;width:${s.pctUp}%;background:var(--green);border-radius:2px;"></div></div>
+          <div style="font-size:9px;color:var(--text3);">↑</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:15px;font-weight:700;color:var(--red);">${s.pctDown}%</div>
+          <div style="height:3px;background:var(--bg5);border-radius:2px;margin:3px 0;overflow:hidden;"><div style="height:100%;width:${s.pctDown}%;background:var(--red);border-radius:2px;"></div></div>
+          <div style="font-size:9px;color:var(--text3);">↓</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:15px;font-weight:700;color:var(--text2);">${s.pctEqual}%</div>
+          <div style="height:3px;background:var(--bg5);border-radius:2px;margin:3px 0;overflow:hidden;"><div style="height:100%;width:${s.pctEqual}%;background:var(--text3);border-radius:2px;"></div></div>
+          <div style="font-size:9px;color:var(--text3);">→</div>
+        </div>
+      </div>
+      <!-- Top candidates -->
+      ${s.topCandidates?.length ? `
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Top transiciones</div>
+      ${s.topCandidates.slice(0,4).map((c,i) => {
+        const w = Math.round(c.count / maxCount * 100);
+        const col = i===0?'var(--red)':i===1?'var(--gold)':'var(--green)';
+        return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${col};width:22px;cursor:pointer;" onclick="quickSelectNum(${c.num})">${c.num}</span>
+          <div style="flex:1;height:4px;background:var(--bg5);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${w}%;background:${col};border-radius:2px;"></div></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);width:22px;text-align:right;">${c.count}x</span>
+        </div>`;
+      }).join('')}` : ''}
+      <!-- Pool chips -->
+      ${topNums.length ? `
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:7px;margin-bottom:4px;">Pool</div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;">
+        ${topNums.map(n=>`<span onclick="quickSelectNum(${n})" style="cursor:pointer;background:rgba(0,200,83,0.12);border:1px solid var(--green);color:var(--green);border-radius:4px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;">${n}</span>`).join('')}
+      </div>` : ''}
+    </div>`;
+  };
+
+  const lCard = matrixDetailCard(`Lote ${sL?.loteId ?? ''}`, sL, 'up');
+  const iCard = matrixDetailCard('Inmediato (200 sorteos)', sI, 'down');
 
   card.innerHTML = `
+    <!-- Row 1: Stats -->
     <div class="dir-stat">
-      <div class="dir-stat-val">${s.refNum}</div>
-      <div class="dir-stat-lbl">Número anterior</div>
+      <div class="dir-stat-val">${cx.refNum}</div>
+      <div class="dir-stat-lbl">Nº anterior P${pos+1}</div>
     </div>
     <div class="dir-stat">
-      <div class="dir-stat-val">${s.avg}</div>
-      <div class="dir-stat-lbl">Promedio lote ${s.loteId}</div>
+      <div class="dir-stat-val">${cx.avg ?? '—'}</div>
+      <div class="dir-stat-lbl">Promedio lote</div>
     </div>
-    <div class="dir-stat">
-      <div class="dir-stat-val">${s.loteSize}</div>
-      <div class="dir-stat-lbl">Sorteos del lote</div>
+    <div class="dir-stat" style="background:${signalMeta.badge};border:1px solid ${signalMeta.bcolor}33;">
+      <div class="dir-stat-val" style="font-size:14px;color:${signalMeta.bcolor};">${signalMeta.label}</div>
+      <div class="dir-stat-lbl">${cx.loteSize ?? '—'} sorteos</div>
     </div>
 
+    <!-- Row 2: Arrow box -->
     <div class="dir-arrow-box">
-      <span class="dir-arrow ${arrowClass}">${arrowSymbol}</span>
-      <div class="dir-trend-txt ${arrowClass}">${trendLabel}</div>
-      <div class="dir-sub" style="margin-top:6px;">
-        Basado en las transiciones del <strong>Lote ${s.loteId}</strong> (${s.loteSize} sorteos)
-        &nbsp;·&nbsp; Desv. estándar: ${s.stddev}
+      <!-- Main fused arrow -->
+      <span class="dir-arrow ${cx.arrowClass}" style="font-size:${cx.signal === 'agree' ? '44' : '32'}px;letter-spacing:-4px;">${cx.arrowGlyph}</span>
+      <div class="dir-trend-txt ${cx.arrowClass}" style="margin-top:4px;">${trendLabel}</div>
+      <div class="dir-sub" style="margin-top:4px;">${signalMeta.desc}</div>
+
+      <!-- Individual matrix full cards -->
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;">
+        ${lCard}
+        ${iCard}
       </div>
 
-      <!-- Direction vote bars -->
+      <!-- Combined vote bars -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
         <div style="text-align:center;">
-          <div style="font-size:22px;color:var(--green);font-weight:700;">${s.pctUp}%</div>
-          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
-            <div style="height:100%;width:${pctBarUp};background:var(--green);border-radius:2px;"></div>
-          </div>
+          <div style="font-size:20px;color:var(--green);font-weight:700;">${cx.combinedUp}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;"><div style="height:100%;width:${cx.combinedUp}%;background:var(--green);border-radius:2px;"></div></div>
           <div style="font-size:10px;color:var(--text3);">↑ Sube</div>
         </div>
         <div style="text-align:center;">
-          <div style="font-size:22px;color:var(--red);font-weight:700;">${s.pctDown}%</div>
-          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
-            <div style="height:100%;width:${pctBarDown};background:var(--red);border-radius:2px;"></div>
-          </div>
+          <div style="font-size:20px;color:var(--red);font-weight:700;">${cx.combinedDown}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;"><div style="height:100%;width:${cx.combinedDown}%;background:var(--red);border-radius:2px;"></div></div>
           <div style="font-size:10px;color:var(--text3);">↓ Baja</div>
         </div>
         <div style="text-align:center;">
-          <div style="font-size:22px;color:var(--text2);font-weight:700;">${s.pctEqual}%</div>
-          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;">
-            <div style="height:100%;width:${pctBarEq};background:var(--text3);border-radius:2px;"></div>
-          </div>
+          <div style="font-size:20px;color:var(--text2);font-weight:700;">${cx.combinedEq}%</div>
+          <div style="height:4px;background:var(--bg5);border-radius:2px;margin:4px 0;overflow:hidden;"><div style="height:100%;width:${cx.combinedEq}%;background:var(--text3);border-radius:2px;"></div></div>
           <div style="font-size:10px;color:var(--text3);">→ Igual</div>
         </div>
       </div>
 
-      <!-- Sorteos recientes del lote -->
+      <!-- Recent lote values -->
+      ${cx.recentNums && cx.recentNums.length ? `
       <div style="margin-top:10px;display:flex;gap:5px;justify-content:center;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:10px;color:var(--text3);">Últimos en lote P${pos+1}:</span>
-        ${s.recentNums.map(n => `<span style="background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 9px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text)">${n}</span>`).join(' → ')}
-      </div>
+        <span style="font-size:10px;color:var(--text3);">Últimos lote P${pos+1}:</span>
+        ${cx.recentNums.map(n => `<span style="background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 9px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text)">${n}</span>`).join(' → ')}
+      </div>` : ''}
     </div>
 
-    <!-- Pool verde candidato -->
+    <!-- Row 3: Pool -->
     <div class="dir-ma-bar-wrap">
-      <div class="dir-ma-title">🟢 Pool Direccional — candidatos iluminados en la cuadrícula</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
-        ${s.dirPool.length > 0
-          ? s.dirPool.map(n => `<span onclick="quickSelectNum(${n})" style="cursor:pointer;background:rgba(0,200,83,0.15);border:1.5px solid var(--green);color:var(--green);border-radius:5px;padding:3px 9px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;" title="Agregar ${n}">${n}</span>`).join('')
-          : '<span style="color:var(--text3);font-size:11px;">Sin candidatos con datos actuales</span>'}
+      <div class="dir-ma-title">
+        ${cx.signal === 'agree' ? '🟢🟢 Pool Reforzado — intersección de ambas matrices' :
+          cx.signal === 'neutral' ? '🟡 Abanico Abierto — sin consenso, máximas opciones' :
+          '🟢 Pool Direccional'}
       </div>
-      <div class="dir-ma-title" style="margin-top:8px;">Top transiciones desde ${s.refNum} en P${pos+1}</div>
-      ${s.topCandidates.map((c, i) => {
-        const w = Math.round(c.count / (s.topCandidates[0]?.count || 1) * 100);
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;">
+        ${cx.pool.length > 0
+          ? cx.pool.map(n => `<span onclick="quickSelectNum(${n})" style="cursor:pointer;${poolChipStyle(cx.poolStrength)}border-radius:6px;padding:4px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;" title="Agregar ${n} a selección">${n}</span>`).join('')
+          : '<span style="color:var(--text3);font-size:11px;">Sin candidatos</span>'}
+      </div>
+      <div class="dir-ma-title" style="margin-top:6px;">Top candidatos fusionados (Lote 55% · Inmediato 45%)</div>
+      ${cx.mergedCandidates.map((c, i) => {
+        const w = Math.round(c.count / (cx.mergedCandidates[0]?.count || 1) * 100);
         const col = i === 0 ? 'var(--red)' : i === 1 ? 'var(--gold)' : 'var(--green)';
         return `<div class="dir-ma-bar-row">
-          <span class="dir-ma-label" style="cursor:pointer;color:${col}" onclick="quickSelectNum(${c.num})">${c.num} ↗</span>
+          <span class="dir-ma-label" style="cursor:pointer;color:${col};font-weight:700;" onclick="quickSelectNum(${c.num})">${c.num} ↗</span>
           <div class="dir-ma-bg"><div class="dir-ma-fill" style="width:${w}%;background:${col}"></div></div>
           <span class="dir-ma-val">${c.count}x</span>
         </div>`;
@@ -3317,85 +3549,150 @@ function renderDirCard(pos) {
 // ════════════════════════════════════════════════════════════════════
 
 function computeMarkov() {
-  // For each position pos, build: prevNum → {nextNum: count}
-  const analysisHistory = HISTORY.slice(0, 25);
-  if (analysisHistory.length < 4) return null;
+  // POSITION-AGNOSTIC Markov (Cadena Agnostica):
+  // For every number X that appears anywhere in draw[i],
+  // record ALL 6 numbers of draw[i-1] (the next draw) as successors.
+  // This multiplies training data by 6 and captures cross-position attraction.
+  const draws = HISTORY.slice(0, 200);
+  if (draws.length < 4) return null;
 
-  // Result: array[6] of Map(prevNum → [{num, count}])
-  const matrices = Array.from({length: 6}, () => new Map());
+  // globalMap: prevNum (1-39) → Map(nextNum → count)
+  const globalMap = new Map();
+  for (let n = 1; n <= 39; n++) globalMap.set(n, new Map());
 
-  for (let i = 0; i < analysisHistory.length - 1; i++) {
-    const prev = analysisHistory[i + 1]; // older draw
-    const curr = analysisHistory[i];     // newer draw (what came after)
-    for (let pos = 0; pos < 6; pos++) {
-      const prevNum = prev.nums[pos];
-      const currNum = curr.nums[pos];
-      if (!prevNum || !currNum) continue;
-      if (!matrices[pos].has(prevNum)) matrices[pos].set(prevNum, new Map());
-      const inner = matrices[pos].get(prevNum);
-      inner.set(currNum, (inner.get(currNum) || 0) + 1);
-    }
+  for (let i = 0; i < draws.length - 1; i++) {
+    const prevDraw = draws[i + 1]; // older (what was before)
+    const nextDraw = draws[i];     // newer (what came after)
+
+    prevDraw.nums.forEach(prevNum => {
+      if (!prevNum) return;
+      const inner = globalMap.get(prevNum);
+      // All 6 numbers from the NEXT draw are successors of prevNum
+      nextDraw.nums.forEach(nextNum => {
+        if (!nextNum) return;
+        inner.set(nextNum, (inner.get(nextNum) || 0) + 1);
+      });
+    });
   }
 
-  // Convert to sorted arrays
-  return matrices.map(mat => {
-    const result = [];
-    mat.forEach((inner, prevNum) => {
-      const sorted = [...inner.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
-      result.push({prevNum, nexts: sorted.map(([num, count]) => ({num, count}))});
-    });
-    return result.sort((a, b) => b.nexts[0]?.count - a.nexts[0]?.count);
+  // Convert globalMap to sorted ranked array per prevNum
+  const result = [];
+  globalMap.forEach((inner, prevNum) => {
+    if (inner.size === 0) return;
+    const nexts = [...inner.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([num, count]) => ({ num, count }));
+    result.push({ prevNum, nexts, totalObs: [...inner.values()].reduce((s, c) => s + c, 0) });
   });
+
+  // Sort by totalObs descending so most-active numbers appear first
+  result.sort((a, b) => b.totalObs - a.totalObs);
+  return result;
 }
 
 function renderMarkov() {
   const el = document.getElementById('markovGrid');
   if (!el) return;
   const data = computeMarkov();
-  if (!data) {
+  if (!data || data.length === 0) {
     el.innerHTML = '<div style="color:var(--text3);font-size:12px;">Sin datos suficientes.</div>';
     return;
   }
 
-  // Show the current position's transitions (use currentDirPos)
-  const pos = currentDirPos;
-  const posData = data[pos].slice(0, 8); // top 8 predecessors
+  // Focus: show the rows where prevNum is one of the numbers in the most recent draw
+  // This answers: "given what just happened, what should come next?"
+  const lastDraw = HISTORY[0]?.nums || [];
+  const totalDraws = Math.min(HISTORY.length, 200);
 
-  const ranks = ['rank1','rank2','rank3','rank4'];
+  // Build lookup: prevNum → ranked successors
+  const lookup = new Map(data.map(r => [r.prevNum, r]));
+
+  // For each number in the last draw, show its top successors
+  const rows = lastDraw
+    .filter(n => n && lookup.has(n))
+    .map(n => lookup.get(n));
+
+  // Also allow a search input to look up any number
+  const searchVal = document.getElementById('markovSearch')?.value?.trim();
+  let searchRow = null;
+  if (searchVal) {
+    const sn = parseInt(searchVal);
+    if (sn >= 1 && sn <= 39 && lookup.has(sn)) searchRow = lookup.get(sn);
+  }
+
+  const ranks = ['rank1','rank2','rank3','rank4','rank4'];
+
+  const renderRow = (row) => {
+    const pct = row.nexts.map(n => Math.round(n.count / (row.totalObs || 1) * 100));
+    return `<tr>
+      <td>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span class="mk-prev" style="font-size:15px;">${row.prevNum}</span>
+          <span style="font-size:9px;color:var(--text3);">${row.totalObs}obs</span>
+        </div>
+      </td>
+      <td>
+        <div class="mk-next-chips">
+          ${row.nexts.map((n, i) => `
+            <span class="mk-chip ${ranks[i]}" onclick="quickSelectNum(${n.num})"
+              title="${n.count} veces (${pct[i]}%)">
+              ${n.num}<span style="font-size:8px;opacity:0.6;margin-left:2px;">${pct[i]}%</span>
+            </span>
+          `).join('')}
+        </div>
+      </td>
+      <td style="color:var(--text3);font-size:10px;white-space:nowrap;">
+        ${pct[0]}%<br><span style="font-size:9px;">${row.nexts[0]?.count}x</span>
+      </td>
+    </tr>`;
+  };
 
   el.innerHTML = `
-    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">
-      Mostrando transiciones para <strong style="color:var(--red)">P${pos+1}</strong>.
-      Selecciona otra posición arriba para cambiar la vista.
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+      Cadena de Markov agóstica a la posición — <strong style="color:var(--text2)">${totalDraws} sorteos</strong> analizados,
+      <strong style="color:var(--text2)">${totalDraws * 6 * 5}</strong> transiciones registradas.
+      Cada número ve los 6 números del sorteo siguiente como sucesores.
+    </div>
+
+    <!-- Search any number -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <input id="markovSearch" type="number" min="1" max="39" placeholder="Buscar número (1–39)"
+        style="width:160px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:6px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;"
+        oninput="renderMarkov()">
+      <span style="font-size:11px;color:var(--text3);">← Ve qué números le siguen a cualquier número</span>
+    </div>
+
+    ${searchRow ? `
+    <div style="background:rgba(232,0,29,0.07);border:1px solid rgba(232,0,29,0.2);border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+      <div style="font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
+        🔍 Resultado para el número ${searchRow.prevNum}
+      </div>
+      <table class="markov-table" style="margin:0"><tbody>${renderRow(searchRow)}</tbody></table>
+    </div>` : ''}
+
+    <!-- Rows for last draw's numbers -->
+    <div style="font-size:10px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+      Basado en el último sorteo: ${lastDraw.join(' · ')}
     </div>
     <table class="markov-table">
       <thead>
         <tr>
-          <th>Nº anterior en P${pos+1}</th>
-          <th>Más frecuentes en P${pos+1} del sorteo siguiente</th>
-          <th>Veces</th>
+          <th>Nº del último sorteo</th>
+          <th>Sucesores más frecuentes en cualquier posición del siguiente sorteo</th>
+          <th>Top %</th>
         </tr>
       </thead>
       <tbody>
-        ${posData.map(row => `
-          <tr>
-            <td class="mk-prev">${row.prevNum}</td>
-            <td>
-              <div class="mk-next-chips">
-                ${row.nexts.map((n, i) => `
-                  <span class="mk-chip ${ranks[i]}" onclick="quickSelectNum(${n.num})" title="Agregar ${n.num} a la selección">
-                    ${n.num}
-                  </span>
-                `).join('')}
-              </div>
-            </td>
-            <td style="color:var(--text3);font-size:10px;">${row.nexts[0]?.count || 0}x</td>
-          </tr>
-        `).join('')}
+        ${rows.length > 0
+          ? rows.map(renderRow).join('')
+          : '<tr><td colspan="3" style="color:var(--text3);text-align:center;padding:12px;">Carga datos reales para ver las transiciones.</td></tr>'
+        }
       </tbody>
     </table>
-    <div style="font-size:10px;color:var(--text3);margin-top:8px;">
-      💡 Toca cualquier número del cuadro para agregarlo directamente a la selección actual.
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;">
+      💡 Toca cualquier número para agregarlo a la selección. Los % indican qué tan seguido ese número
+      apareció en el sorteo siguiente cuando el número de la izquierda salió en el sorteo anterior.
     </div>
   `;
 }
@@ -3416,7 +3713,7 @@ function quickSelectNum(n) {
 // ════════════════════════════════════════════════════════════════════
 
 function computeDeltas() {
-  const analysisHistory = HISTORY.slice(0, 25);
+  const analysisHistory = HISTORY.slice(0, 200);
   if (analysisHistory.length === 0) return null;
 
   // For each gap (P1→P2, P2→P3, ..., P5→P6): collect all deltas
