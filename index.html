@@ -769,6 +769,13 @@ body {
 .history-table tr:last-child td { border-bottom: none; }
 .history-table tr:hover td { background: var(--bg4); }
 
+/* Resaltados por Lote */
+.lot-1-highlight { background-color: rgba(0, 200, 83, 0.2) !important; }
+.lot-2-highlight { background-color: rgba(232, 0, 29, 0.2) !important; }
+.lot-3-highlight { background-color: rgba(255, 184, 0, 0.2) !important; }
+.lot-4-highlight { background-color: rgba(74, 158, 255, 0.2) !important; }
+.lot-5-highlight { background-color: rgba(156, 39, 176, 0.2) !important; }
+
 .hist-num {
   display: inline-flex;
   align-items: center;
@@ -2614,15 +2621,40 @@ function switchTab(id) {
 
 function renderHistory() {
   const body = document.getElementById('historyBody');
+  if (!body) return;
   body.innerHTML = '';
-  HISTORY.forEach(h => {
+  
+  // Mostramos los últimos 200 sorteos para un análisis histórico completo
+  const draws = HISTORY.slice(0, 200);
+
+  draws.forEach(h => {
     const tr = document.createElement('tr');
+    const lot = getLot(h.id);
+    tr.dataset.lot = lot;
+    tr.style.cursor = 'pointer';
+    tr.title = `Clic para resaltar Lote ${lot} (Terminaciones ${(lot-1)%5} y ${(lot+4)%10})`;
+
+    tr.onclick = () => {
+      const isSelected = tr.classList.contains(`lot-${lot}-highlight`);
+      // Limpiar todos los resaltados previos
+      document.querySelectorAll('#historyBody tr').forEach(r => {
+        r.classList.remove('lot-1-highlight', 'lot-2-highlight', 'lot-3-highlight', 'lot-4-highlight', 'lot-5-highlight');
+      });
+      // Si no estaba seleccionado, resaltar todo el lote
+      if (!isSelected) {
+        document.querySelectorAll(`#historyBody tr[data-lot="${lot}"]`).forEach(r => {
+          r.classList.add(`lot-${lot}-highlight`);
+        });
+      }
+    };
+
     const numHtml = h.nums.map(n => `<span class="hist-num">${n}</span>`).join('');
     const sum = h.nums.reduce((s,n)=>s+n,0);
     const range = h.nums[5] - h.nums[0];
+
     tr.innerHTML = `
-      <td style="color:var(--text3)">${h.id}</td>
-      <td style="color:var(--text3)">${h.date.getDate()}/${h.date.getMonth()+1}/${h.date.getFullYear()}</td>
+      <td style="color:var(--text); font-weight:700;">#${h.id}</td>
+      <td style="color:var(--text3)">${h.date.toLocaleDateString('es-MX')}</td>
       <td>${numHtml}</td>
       <td style="color:var(--gold)">${sum}</td>
       <td style="color:var(--text3)">${range}</td>
