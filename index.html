@@ -769,13 +769,6 @@ body {
 .history-table tr:last-child td { border-bottom: none; }
 .history-table tr:hover td { background: var(--bg4); }
 
-/* Resaltados por Lote */
-.lot-1-highlight { background-color: rgba(0, 200, 83, 0.2) !important; }
-.lot-2-highlight { background-color: rgba(232, 0, 29, 0.2) !important; }
-.lot-3-highlight { background-color: rgba(255, 184, 0, 0.2) !important; }
-.lot-4-highlight { background-color: rgba(74, 158, 255, 0.2) !important; }
-.lot-5-highlight { background-color: rgba(156, 39, 176, 0.2) !important; }
-
 .hist-num {
   display: inline-flex;
   align-items: center;
@@ -1295,6 +1288,7 @@ body {
 
 @media (max-width: 768px) {
   #content-historial > div { grid-template-columns: 1fr !important; }
+  #content-historial > div > div:last-child { position: static !important; } /* unstick tubes on mobile */
 }
 
 
@@ -1443,6 +1437,145 @@ body {
   .dir-arrow-box, .dir-ma-bar-wrap { grid-column: span 2; }
   .delta-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+
+/* ── LOTE ROW COLORS ─────────────────────────────────────────── */
+.lote-1 { border-left: 3px solid #00C853; }
+.lote-2 { border-left: 3px solid #E8001D; }
+.lote-3 { border-left: 3px solid #FFB800; }
+.lote-4 { border-left: 3px solid #4AC8FF; }
+.lote-5 { border-left: 3px solid #9F7AFF; }
+
+.lote-badge {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 4px; flex-shrink: 0;
+  vertical-align: middle;
+}
+.lote-badge-1 { background: #00C853; }
+.lote-badge-2 { background: #E8001D; }
+.lote-badge-3 { background: #FFB800; }
+.lote-badge-4 { background: #4AC8FF; }
+.lote-badge-5 { background: #9F7AFF; }
+
+tr.selected-draw td { background: rgba(255,255,255,0.06) !important; }
+
+/* ── TUBE SIMULATOR ──────────────────────────────────────────── */
+.tube-section {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.tube-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tubes-wrap {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: flex-end;
+}
+.tube {
+  display: flex;
+  flex-direction: column-reverse;   /* 1 at bottom, highest at top */
+  align-items: center;
+  gap: 4px;
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  border-radius: 30px;
+  padding: 8px 6px;
+  min-width: 48px;
+  position: relative;
+}
+.tube-label {
+  font-size: 9px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px;
+  text-align: center; margin-top: 6px;
+}
+.tube-ball {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  background: var(--bg5);
+  color: var(--text3);
+  border: 1.5px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+  position: relative;
+}
+/* Lit states per lote */
+/* Terminal 0: lime */
+.tube-ball.lit-0  { background:#C6FF00; color:#000; border-color:#E6FF80; box-shadow:0 0 10px rgba(198,255,0,0.55); }
+/* Terminal 1: red */
+.tube-ball.lit-1  { background:#E8001D; color:#fff; border-color:#FF4444; box-shadow:0 0 10px rgba(232,0,29,0.55); }
+/* Terminal 2: orange */
+.tube-ball.lit-2  { background:#FF6D00; color:#fff; border-color:#FF9E40; box-shadow:0 0 10px rgba(255,109,0,0.55); }
+/* Terminal 3: gold */
+.tube-ball.lit-3  { background:#FFB800; color:#000; border-color:#FFD54F; box-shadow:0 0 10px rgba(255,184,0,0.55); }
+/* Terminal 4: teal */
+.tube-ball.lit-4  { background:#00BFA5; color:#fff; border-color:#64FFDA; box-shadow:0 0 10px rgba(0,191,165,0.55); }
+/* Terminal 5: sky blue */
+.tube-ball.lit-5  { background:#4AC8FF; color:#000; border-color:#80D8FF; box-shadow:0 0 10px rgba(74,200,255,0.55); }
+/* Terminal 6: pink */
+.tube-ball.lit-6  { background:#FF4081; color:#fff; border-color:#FF80AB; box-shadow:0 0 10px rgba(255,64,129,0.55); }
+/* Terminal 7: purple */
+.tube-ball.lit-7  { background:#9F7AFF; color:#fff; border-color:#CE93D8; box-shadow:0 0 10px rgba(159,122,255,0.55); }
+/* Terminal 8: emerald */
+.tube-ball.lit-8  { background:#00C853; color:#000; border-color:#69F0AE; box-shadow:0 0 10px rgba(0,200,83,0.55); }
+/* Terminal 9: indigo */
+.tube-ball.lit-9  { background:#3D5AFE; color:#fff; border-color:#8C9EFF; box-shadow:0 0 10px rgba(61,90,254,0.55); }
+
+.tube-ball.lit-0,.tube-ball.lit-1,.tube-ball.lit-2,.tube-ball.lit-3,.tube-ball.lit-4,
+.tube-ball.lit-5,.tube-ball.lit-6,.tube-ball.lit-7,.tube-ball.lit-8,.tube-ball.lit-9 {
+  transform: scale(1.12);
+}
+
+/* Lote legend strip */
+.lote-legend {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.lote-leg-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--text3);
+  padding: 3px 8px; border-radius: 20px;
+  border: 1px solid;
+}
+
+@media (max-width: 768px) {
+  .tube { min-width: 36px; }
+  .tube-ball { width: 26px; height: 26px; font-size: 9px; }
+  .tubes-wrap { gap: 4px; }
+}
+
+
+/* ── LOTE HIGHLIGHT ROWS ─────────────────────────────────────── */
+.lote-leg-pill {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.lote-leg-pill:hover { opacity: 0.8; transform: scale(1.05); }
+.lote-leg-pill.active-pill { box-shadow: 0 0 8px currentColor; transform: scale(1.08); }
+
+/* Active (highlighted) rows */
+tr.lote-active td { transition: background 0.25s, opacity 0.25s; }
+tr.lote-active.hl-1 td { background: rgba(0,200,83,0.12) !important; }
+tr.lote-active.hl-2 td { background: rgba(232,0,29,0.12) !important; }
+tr.lote-active.hl-3 td { background: rgba(255,184,0,0.12) !important; }
+tr.lote-active.hl-4 td { background: rgba(74,200,255,0.12) !important; }
+tr.lote-active.hl-5 td { background: rgba(159,122,255,0.12) !important; }
+
+/* Dimmed rows (non-highlighted when a lote is active) */
+tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 
 </style>
 </head>
@@ -1677,31 +1810,43 @@ body {
 
     <!-- TAB: HISTORIAL -->
     <div class="tab-content" id="content-historial">
-      <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;">
 
-        <!-- LEFT: Ticket Virginity Check -->
+      <!-- Lote legend + active indicator -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:700;">Toca un sorteo para resaltar su lote:</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="lote-leg-pill" data-lot="1" style="background:rgba(0,200,83,0.12);border:1px solid #00C853;color:#00C853;" onclick="toggleLotFilter(1)">L1 — 0,5</span>
+          <span class="lote-leg-pill" data-lot="2" style="background:rgba(232,0,29,0.12);border:1px solid #E8001D;color:#E8001D;" onclick="toggleLotFilter(2)">L2 — 1,6</span>
+          <span class="lote-leg-pill" data-lot="3" style="background:rgba(255,184,0,0.12);border:1px solid #FFB800;color:#FFB800;" onclick="toggleLotFilter(3)">L3 — 2,7</span>
+          <span class="lote-leg-pill" data-lot="4" style="background:rgba(74,200,255,0.12);border:1px solid #4AC8FF;color:#4AC8FF;" onclick="toggleLotFilter(4)">L4 — 3,8</span>
+          <span class="lote-leg-pill" data-lot="5" style="background:rgba(159,122,255,0.12);border:1px solid #9F7AFF;color:#9F7AFF;" onclick="toggleLotFilter(5)">L5 — 4,9</span>
+        </div>
+        <span id="loteActiveLabel" style="font-size:10px;color:var(--text3);font-style:italic;"></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:start;">
+
+        <!-- COL 1: Ticket Virginity Check -->
         <div>
-          <div class="section-title">🔍 Verificador de Boletos</div>
+          <div class="section-title">🔍 Verificador</div>
           <div id="ticketVirginityList"></div>
           <div style="margin-top:8px;font-size:10px;color:var(--text3);line-height:1.6;">
             <span style="color:var(--green);font-weight:700;">● Virgen</span> — nunca ha salido<br>
-            <span style="color:var(--gold);font-weight:700;">● Parcial</span> — 3+ aciertos en algún sorteo<br>
-            <span style="color:var(--red);font-weight:700;">● Repetida</span> — combinación exacta registrada
+            <span style="color:var(--gold);font-weight:700;">● Parcial</span> — 3+ aciertos<br>
+            <span style="color:var(--red);font-weight:700;">● Repetida</span> — exacta registrada
           </div>
         </div>
 
-        <!-- RIGHT: History table -->
+        <!-- COL 2: History table -->
         <div>
-          <div class="section-title">Últimos 25 Sorteos</div>
           <div style="overflow-x:auto;">
             <table class="history-table">
               <thead>
                 <tr>
+                  <th>Lote</th>
                   <th>#</th>
                   <th>Fecha</th>
                   <th>Números</th>
-                  <th>Suma</th>
-                  <th>Rango</th>
                 </tr>
               </thead>
               <tbody id="historyBody"></tbody>
@@ -1863,10 +2008,12 @@ function updateCalculatedData() {
   INHERITED = new Set();
   HISTORY.slice(0,3).forEach(h => h.nums.forEach(n => INHERITED.add(n)));
 
-  // Deuda
+  // Deuda (Distribución Geométrica — E[X]=1/p, deuda = sorteos_sin_salir - E[X])
+  GEO_DEBT = null; // force recompute
+  const gd = ensureGeoDebt();
   for(let n=1; n<=39; n++) {
-    const lastIdx = analysisHistory.findIndex(h => h.nums.includes(n));
-    DEBT[n] = lastIdx === -1 ? 25 : lastIdx;
+    // Keep DEBT[] compatible (positive = more overdue) using geometric score
+    DEBT[n] = Math.max(0, gd[n]?.score || 0);
   }
 
   // Probabilidad por posición
@@ -2359,10 +2506,64 @@ function updateSeqAssistant() {
   const sugSet = getSeqSuggestions();
   const suggestions = [...sugSet].slice(0,5);
 
-  hint.innerHTML = `💡 <strong>Posición ${posNames[pos]}:</strong> Se recomiendan números entre ${range.min}–${range.max}. Tenemos ${sugSet.size} números del pool disponibles. <br>Sugeridos: ${suggestions.join(', ')}`;
+  const itSugg = getInverseTransformSuggestions(pos, currentSelection);
+  const ns = ensureNormalStats();
+  const normStat = ns ? ns[pos] : null;
+
+  const suggHtml = itSugg.map(s => {
+    let zone = '';
+    if (normStat) {
+      const z = zScore(s.num, normStat.mu, normStat.sigma);
+      zone = getZZone(z);
+    }
+    const zoneColor = zone === 'core' ? 'var(--green)' : zone === 'mid' ? 'var(--gold)' : 'var(--text3)';
+    // Per-source bar: lote / inmediato / global
+    const barHtml = `
+      <div style="display:flex;flex-direction:column;gap:1px;margin-top:3px;width:100%;">
+        <div style="display:flex;align-items:center;gap:2px;" title="Lote ${s.pctL}%">
+          <span style="font-size:7px;color:#9090A8;width:8px;flex-shrink:0;">L</span>
+          <div style="flex:1;height:3px;background:var(--bg5);border-radius:1px;overflow:hidden;">
+            <div style="height:100%;width:${s.pctL}%;background:#4AC8FF;border-radius:1px;"></div>
+          </div>
+          <span style="font-size:7px;color:#4AC8FF;width:18px;text-align:right;">${s.pctL}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:2px;" title="Inmediato ${s.pctI}%">
+          <span style="font-size:7px;color:#9090A8;width:8px;flex-shrink:0;">I</span>
+          <div style="flex:1;height:3px;background:var(--bg5);border-radius:1px;overflow:hidden;">
+            <div style="height:100%;width:${s.pctI}%;background:#FFB800;border-radius:1px;"></div>
+          </div>
+          <span style="font-size:7px;color:#FFB800;width:18px;text-align:right;">${s.pctI}%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:2px;" title="Global ${s.pctG}%">
+          <span style="font-size:7px;color:#9090A8;width:8px;flex-shrink:0;">G</span>
+          <div style="flex:1;height:3px;background:var(--bg5);border-radius:1px;overflow:hidden;">
+            <div style="height:100%;width:${s.pctG}%;background:var(--text3);border-radius:1px;"></div>
+          </div>
+          <span style="font-size:7px;color:var(--text3);width:18px;text-align:right;">${s.pctG}%</span>
+        </div>
+      </div>`;
+
+    return `<div onclick="toggleNum(${s.num})" style="cursor:pointer;background:var(--bg4);border:1.5px solid ${zoneColor};border-radius:7px;padding:5px 7px;display:flex;flex-direction:column;align-items:center;min-width:52px;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${zoneColor};">${s.num}</span>
+      <span style="font-size:9px;font-weight:700;color:${zoneColor};margin-bottom:2px;">${s.pct}%</span>
+      ${barHtml}
+    </div>`;
+  }).join('');
+
+  const normInfo = normStat
+    ? `µ=${normStat.mu} σ=${normStat.sigma} · <span style="color:var(--green)">±1σ=[${Math.round(normStat.mu-normStat.sigma)}–${Math.round(normStat.mu+normStat.sigma)}]</span>`
+    : '';
+
+  hint.innerHTML = `💡 <strong>P${posNames[pos]}:</strong> ${range.min}–${range.max} &nbsp;${normInfo}<br>
+    <div style="display:flex;gap:3px;margin-top:3px;font-size:9px;color:var(--text3);">
+      <span style="color:#4AC8FF;">█ Lote (55%)</span>&nbsp;
+      <span style="color:#FFB800;">█ Inmediato (30%)</span>&nbsp;
+      <span style="color:var(--text3);">█ Global (15%)</span>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">${suggHtml}</div>`;
 
   rangeAlert.style.display = 'flex';
-  rangeAlert.textContent = `⚠ Rango esperado P${pos+1}: entre ${range.min} y ${range.max}`;
+  rangeAlert.innerHTML = `⚠ Rango P${pos+1}: ${range.min}–${range.max} &nbsp;·&nbsp; ±1σ esperado alrededor de ${normStat ? normStat.mu : '—'}`;
 }
 
 // ============================================================
@@ -2370,33 +2571,387 @@ function updateSeqAssistant() {
 // ============================================================
 
 function randomize() {
-  // Súper Randomize: 4 de la Intersección Crítica + 2 del Pool de alta frecuencia
+  // ────────────────────────────────────────────────────────────────
+  // SÚPER RANDOMIZE v2 — Transformación Inversa + Rechazo
+  // ────────────────────────────────────────────────────────────────
   if (HISTORY.length === 0) {
     showNotif('⚠ Importa datos reales para activar el Súper Randomize.', 'error');
     return;
   }
-  if (CRITICAL_PARTNERS.size < 4) {
-    showNotif(
-      `Intersección Crítica insuficiente: ${CRITICAL_PARTNERS.size} números (mínimo 4). Verifica datos de Sorteo Inmediato y de Lote.`,
-      'error'
-    );
-    return;
-  }
 
-  // 1. Exactamente 4 de la Intersección Crítica (Herencia Dual)
-  const criticalSelection = pickRandom([...CRITICAL_PARTNERS], 4);
+  const hasCritical = CRITICAL_PARTNERS.size >= 4;
 
-  // 2. Completar con 2 del Pool de alta frecuencia
-  const poolCandidates = POOL.size >= 2
-    ? [...POOL].filter(n => !criticalSelection.includes(n))
-    : Array.from({length: 39}, (_, i) => i + 1).filter(n => !criticalSelection.includes(n));
+  // Ensure geometric debt is fresh
+  GEO_DEBT = computeGeometricDebt();
 
-  const complement = pickRandom(poolCandidates, 2);
-  currentSelection = [...criticalSelection, ...complement].sort((a, b) => a - b);
+  // Generator function: uses InverseTransform seeded with critical numbers
+  const generator = () => {
+    if (hasCritical) {
+      // 4 de la Intersección Crítica (picked by frequency via InverseTransform)
+      const critPool = [...CRITICAL_PARTNERS];
+      // Weight critical numbers by geometric debt (overdue = higher weight)
+      const weighted = critPool.map(n => ({
+        n, w: 1 + Math.max(0, GEO_DEBT[n]?.debt || 0)
+      })).sort((a, b) => b.w - a.w);
+      const top4 = weighted.slice(0, 4).map(x => x.n);
+      const critSel = pickRandom(top4, Math.min(4, top4.length));
+
+      // Complete with 2 from Pool via inverse transform
+      const poolCandidates = POOL.size >= 2
+        ? [...POOL].filter(n => !critSel.includes(n))
+        : Array.from({length: 39}, (_, i) => i + 1).filter(n => !critSel.includes(n));
+
+      const cdf = buildPositionCDF(5, critSel); // use P6 CDF for complement
+      const c1 = sampleFromCDF(buildPositionCDF(4, critSel)) || pickRandom(poolCandidates, 1)[0];
+      const c2 = sampleFromCDF(buildPositionCDF(5, [...critSel, c1])) || pickRandom(poolCandidates.filter(n=>n!==c1), 1)[0];
+
+      return [...critSel, c1, c2].filter(Boolean).sort((a, b) => a - b);
+    } else {
+      // Fallback: full inverse transform across all 6 positions
+      return generateByInverseTransform();
+    }
+  };
+
+  // Apply rejection sampling — keep best of MAX_TRIES attempts
+  const { combo, score } = generateWithRejection(generator);
+  currentSelection = combo;
 
   renderGrid();
   updateHealth();
-  showNotif(`⚡ Súper Randomize: 4 Intersección Crítica + 2 Pool`, 'success');
+
+  const mode = hasCritical ? '4 Críticos + 2 InvTransform' : 'InvTransform completo';
+  showNotif(`⚡ Súper Randomize v2 [${mode}] · Calidad: ${score}/100`, 'success');
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// PUNTO 1 — TRANSFORMACIÓN INVERSA — TRIPLE CDF FUSIONADA
+// Tres fuentes independientes, fusionadas por pesos:
+//   • Lote     (55%) — sorteos del mismo lote del próximo concurso
+//   • Inmediato(30%) — últimos 15 sorteos consecutivos
+//   • Global   (15%) — últimos 200 sorteos (contexto amplio)
+// ════════════════════════════════════════════════════════════════════
+
+// Pesos de fusión (deben sumar 1.0)
+const CDF_WEIGHTS = { lote: 0.55, immediate: 0.30, global: 0.15 };
+
+// Build a raw frequency map for a given draws array and position
+function buildFreqMap(draws, pos) {
+  const freq = {};
+  for (let n = 1; n <= 39; n++) freq[n] = 0;
+  draws.forEach(h => { if (h.nums[pos]) freq[h.nums[pos]]++; });
+  return freq;
+}
+
+// Convert freq map to a sorted probability mass array (with Laplace smoothing)
+function freqToProbMass(freq, excludeNums, range) {
+  const candidates = [];
+  for (let n = range.min; n <= range.max; n++) {
+    if (!excludeNums.includes(n)) {
+      candidates.push({ num: n, freq: (freq[n] || 0) + 0.5 });
+    }
+  }
+  if (candidates.length === 0) {
+    for (let n = 1; n <= 39; n++) {
+      if (!excludeNums.includes(n)) candidates.push({ num: n, freq: 1 });
+    }
+  }
+  const total = candidates.reduce((s, c) => s + c.freq, 0);
+  return candidates.map(c => ({ num: c.num, prob: c.freq / total }));
+}
+
+// Fuse three probability mass arrays with given weights into one CDF
+function fuseProbMasses(pmL, pmI, pmG, excludeNums) {
+  // Build a unified number set
+  const numSet = new Set([
+    ...pmL.map(x => x.num),
+    ...pmI.map(x => x.num),
+    ...pmG.map(x => x.num),
+  ]);
+
+  const lookupL = Object.fromEntries(pmL.map(x => [x.num, x.prob]));
+  const lookupI = Object.fromEntries(pmI.map(x => [x.num, x.prob]));
+  const lookupG = Object.fromEntries(pmG.map(x => [x.num, x.prob]));
+
+  const { lote: wL, immediate: wI, global: wG } = CDF_WEIGHTS;
+
+  // Fused probability = weighted sum
+  const fused = [...numSet]
+    .filter(n => !excludeNums.includes(n))
+    .map(n => ({
+      num: n,
+      prob: (lookupL[n] || 0) * wL + (lookupI[n] || 0) * wI + (lookupG[n] || 0) * wG,
+      probL: lookupL[n] || 0,
+      probI: lookupI[n] || 0,
+      probG: lookupG[n] || 0,
+    }))
+    .sort((a, b) => a.num - b.num);
+
+  // Normalize (may not sum to 1 after filtering)
+  const total = fused.reduce((s, x) => s + x.prob, 0) || 1;
+  fused.forEach(x => x.prob /= total);
+
+  // Build CDF
+  let cumulative = 0;
+  return fused.map(x => {
+    cumulative += x.prob;
+    return { ...x, cdf: cumulative };
+  });
+}
+
+// Main entry — builds the triple-fused CDF for a given position
+function buildPositionCDF(pos, excludeNums = []) {
+  const range = POS_RANGES[pos];
+
+  // Global: last 200
+  const globalDraws = HISTORY.slice(0, 200);
+  if (globalDraws.length === 0) return null;
+  const pmG = freqToProbMass(buildFreqMap(globalDraws, pos), excludeNums, range);
+
+  // Immediate: last 15 consecutive
+  const immediateDraws = HISTORY.slice(0, 15);
+  const pmI = freqToProbMass(buildFreqMap(immediateDraws, pos), excludeNums, range);
+
+  // Lote: same lote as next draw
+  const nextId  = (HISTORY[0]?.id || 0) + 1;
+  const nextLot = getLot(nextId);
+  const loteDraws = HISTORY.filter(h => getLot(h.id) === nextLot);
+  const pmL = loteDraws.length > 0
+    ? freqToProbMass(buildFreqMap(loteDraws, pos), excludeNums, range)
+    : pmG; // fallback to global if no lote data
+
+  return fuseProbMasses(pmL, pmI, pmG, excludeNums);
+}
+
+function sampleFromCDF(cdf) {
+  if (!cdf || cdf.length === 0) return null;
+  const r = Math.random();
+  for (const entry of cdf) {
+    if (r <= entry.cdf) return entry.num;
+  }
+  return cdf[cdf.length - 1].num;
+}
+
+// Generate a full 6-number ticket using inverse transform per position
+function generateByInverseTransform(excludeNums = []) {
+  const result = [];
+  for (let pos = 0; pos < 6; pos++) {
+    const used = [...excludeNums, ...result];
+    const cdf = buildPositionCDF(pos, used);
+    const num = sampleFromCDF(cdf);
+    if (num) result.push(num);
+  }
+  return result.sort((a, b) => a - b);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PUNTO 2 — MÉTODO DE RECHAZO (Rejection Sampling)
+// Genera candidatos y rechaza los que no cumplen reglas de calidad.
+// Máximo MAX_TRIES intentos antes de retornar el mejor encontrado.
+// ════════════════════════════════════════════════════════════════════
+const MAX_TRIES = 50;
+
+function scoreCombo(nums) {
+  if (nums.length !== 6) return 0;
+  let score = 100;
+
+  const primes    = nums.filter(n => PRIMES.has(n)).length;
+  const poolCount = nums.filter(n => POOL.has(n)).length;
+  const critCount = nums.filter(n => CRITICAL_PARTNERS.has(n)).length;
+
+  // Innombrables — hard reject
+  if (primes === 6) return -Infinity;              // todos primos
+  if (primes === 0) score -= 30;                  // sin primos
+  if (poolCount === 0) score -= 25;               // sin pool
+
+  // Delta filter — penalizar intervalos fuera del rango histórico
+  const gaps = computeDeltas();
+  if (gaps) {
+    for (let i = 0; i < 5; i++) {
+      const delta = nums[i + 1] - nums[i];
+      const g = gaps[i];
+      if (delta < g.min || delta > g.max) score -= 15;
+      else if (Math.abs(delta - g.avg) > g.stddev) score -= 5;
+    }
+  }
+
+  // Bonus por Intersección Crítica
+  score += critCount * 8;
+  // Bonus por pool
+  score += poolCount * 4;
+  // Bonus por balance par/impar
+  const parCount = nums.filter(n => n % 2 === 0).length;
+  if (parCount >= 2 && parCount <= 4) score += 10;
+
+  return score;
+}
+
+function generateWithRejection(generatorFn, tries = MAX_TRIES) {
+  let bestCombo = null;
+  let bestScore = -Infinity;
+
+  for (let t = 0; t < tries; t++) {
+    const candidate = generatorFn();
+    if (candidate.length !== 6) continue;
+    const s = scoreCombo(candidate);
+    if (s > bestScore) {
+      bestScore = s;
+      bestCombo = candidate;
+    }
+    if (s >= 90) break; // good enough — stop early
+  }
+
+  return { combo: bestCombo || generatorFn(), score: Math.max(0, bestScore) };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PUNTO 3 — DISTRIBUCIÓN NORMAL ±σ para scoring de candidatos
+// Puntúa cada número según su distancia al promedio histórico de Ppos.
+// ════════════════════════════════════════════════════════════════════
+function computePositionNormalStats(pos) {
+  const draws = HISTORY.slice(0, 200);
+  const vals = draws.map(h => h.nums[pos]).filter(Boolean);
+  if (vals.length === 0) return null;
+  const mu = vals.reduce((s, n) => s + n, 0) / vals.length;
+  const variance = vals.reduce((s, n) => s + (n - mu) ** 2, 0) / vals.length;
+  const sigma = Math.sqrt(variance);
+  return { mu: Math.round(mu * 10) / 10, sigma: Math.round(sigma * 10) / 10 };
+}
+
+function zScore(num, mu, sigma) {
+  if (sigma === 0) return 0;
+  return (num - mu) / sigma;
+}
+
+// Returns a zone label for the grid overlay
+function getZZone(z) {
+  const az = Math.abs(z);
+  if (az <= 1) return 'core';     // ±1σ — high probability
+  if (az <= 2) return 'mid';      // ±2σ — moderate
+  return 'tail';                  // >±2σ — atypical
+}
+
+// Build normal stats for all 6 positions (cached after sync)
+let NORMAL_STATS = null;
+function ensureNormalStats() {
+  if (!NORMAL_STATS || NORMAL_STATS.length === 0) {
+    NORMAL_STATS = Array.from({ length: 6 }, (_, i) => computePositionNormalStats(i));
+  }
+  return NORMAL_STATS;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PUNTO 4 — CONVOLUCIÓN ERLANG para deltas generativos
+// Delta entre posición i e i+1 modelado como Erlang(k, µ).
+// ════════════════════════════════════════════════════════════════════
+function fitErlangParams(deltas) {
+  if (!deltas || deltas.length === 0) return { k: 1, mu: 6 };
+  const mu  = deltas.reduce((s, d) => s + d, 0) / deltas.length;
+  const variance = deltas.reduce((s, d) => s + (d - mu) ** 2, 0) / deltas.length;
+  // Method of moments: k = mu²/variance, scale = variance/mu
+  const k = variance > 0 ? Math.max(1, Math.round(mu ** 2 / variance)) : 1;
+  return { k, mu };
+}
+
+function sampleErlang(k, mu) {
+  // Erlang_k = sum of k Exponentials each with mean mu/k
+  // Exponential sample via inverse transform: -mean * ln(r)
+  const scale = mu / k;
+  let sum = 0;
+  for (let i = 0; i < k; i++) {
+    sum += -scale * Math.log(Math.random() || 1e-10);
+  }
+  return Math.round(Math.max(1, sum));
+}
+
+function generateByErlangConvolution(startNum) {
+  const gapData = computeDeltas();
+  if (!gapData) return generateByInverseTransform();
+
+  const result = [startNum];
+  let current = startNum;
+
+  for (let i = 0; i < 5; i++) {
+    const g = gapData[i];
+    const { k, mu } = fitErlangParams(g.deltas);
+    let next, attempts = 0;
+    do {
+      const delta = sampleErlang(k, mu);
+      next = current + delta;
+      attempts++;
+    } while ((next > 39 || result.includes(next)) && attempts < 30);
+
+    if (next > 39 || result.includes(next)) {
+      // Fallback: pick next available
+      for (let n = current + 1; n <= 39; n++) {
+        if (!result.includes(n)) { next = n; break; }
+      }
+    }
+    result.push(next);
+    current = next;
+  }
+
+  return result.sort((a, b) => a - b);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PUNTO 5 — DISTRIBUCIÓN GEOMÉTRICA para índice de Deuda
+// Estima cuántos sorteos más debe esperar cada número para salir.
+// p = frecuencia histórica; E[X] = 1/p (esperanza geométrica)
+// ════════════════════════════════════════════════════════════════════
+function computeGeometricDebt() {
+  const draws = HISTORY.slice(0, 200);
+  const total = draws.length || 1;
+  const result = {};
+
+  for (let n = 1; n <= 39; n++) {
+    const appearances = draws.filter(h => h.nums.includes(n)).length;
+    const p = appearances / total;                    // historical freq
+    const expectedGap = p > 0 ? 1 / p : total;       // geometric E[X] = 1/p
+    const lastIdx = draws.findIndex(h => h.nums.includes(n));
+    const sorteosSinSalir = lastIdx === -1 ? total : lastIdx;
+
+    // Deuda real = sorteos sin salir - E[X] → positivo = "atrasado"
+    const debt = sorteosSinSalir - expectedGap;
+    result[n] = {
+      p: Math.round(p * 1000) / 10,        // % probability
+      expectedGap: Math.round(expectedGap * 10) / 10,
+      sorteosSinSalir,
+      debt: Math.round(debt * 10) / 10,    // signed: + means overdue
+      score: debt                           // use for ranking
+    };
+  }
+
+  return result;
+}
+
+let GEO_DEBT = null;
+function ensureGeoDebt() {
+  if (!GEO_DEBT) GEO_DEBT = computeGeometricDebt();
+  return GEO_DEBT;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// INVERSE TRANSFORM — SEQUENTIAL ASSISTANT (triple-source)
+// Returns top candidates with fused % and per-source breakdown.
+// ════════════════════════════════════════════════════════════════════
+function getInverseTransformSuggestions(pos, excludeNums) {
+  const cdf = buildPositionCDF(pos, excludeNums);
+  if (!cdf) return [];
+
+  // Recover prob mass from CDF (cdf entries already contain probL/probI/probG)
+  const sorted = cdf
+    .filter(e => !excludeNums.includes(e.num))
+    .sort((a, b) => b.prob - a.prob)
+    .slice(0, 8);
+
+  return sorted.map(e => ({
+    num:  e.num,
+    pct:  Math.round(e.prob  * 100),
+    pctL: Math.round(e.probL * 100),
+    pctI: Math.round(e.probI * 100),
+    pctG: Math.round(e.probG * 100),
+  }));
 }
 
 function pickRandom(arr, n) {
@@ -2606,7 +3161,7 @@ function switchTab(id) {
   document.getElementById(`content-${id}`).classList.add('active');
   // Sidebar only visible on Jugadas tab
   document.querySelector('.app-body').classList.toggle('sidebar-hidden', id !== 'jugadas');
-  if (id === 'historial') renderVirginityCheck();
+  if (id === 'historial') { renderVirginityCheck(); }
   if (id === 'analisis') renderAnalysis();
   // Clear directional pool highlight when navigating away from analysis
   if (id !== 'analisis' && DIRECTIONAL_POOL.size > 0) {
@@ -2619,48 +3174,109 @@ function switchTab(id) {
 // HISTORY
 // ============================================================
 
+// Terminal digit → color (0–9, each terminal group its own color)
+const TERMINAL_COLORS={0:'#C6FF00',1:'#E8001D',2:'#FF6D00',3:'#FFB800',4:'#00BFA5',5:'#4AC8FF',6:'#FF4081',7:'#9F7AFF',8:'#00C853',9:'#3D5AFE'};
+
+// Lote color config
+const LOTE_COLORS = {
+  1: { bg: '#00C853', text: '#000', class: 'lit-1', label: 'L1' },
+  2: { bg: '#E8001D', text: '#fff', class: 'lit-2', label: 'L2' },
+  3: { bg: '#FFB800', text: '#000', class: 'lit-3', label: 'L3' },
+  4: { bg: '#4AC8FF', text: '#000', class: 'lit-4', label: 'L4' },
+  5: { bg: '#9F7AFF', text: '#fff', class: 'lit-5', label: 'L5' },
+};
+
+let selectedDrawId = null;
+
 function renderHistory() {
   const body = document.getElementById('historyBody');
-  if (!body) return;
   body.innerHTML = '';
-  
-  // Mostramos los últimos 200 sorteos para un análisis histórico completo
-  const draws = HISTORY.slice(0, 200);
 
-  draws.forEach(h => {
-    const tr = document.createElement('tr');
+  HISTORY.forEach(h => {
     const lot = getLot(h.id);
+    const lc  = LOTE_COLORS[lot];
+    const tr  = document.createElement('tr');
+    tr.className = `lote-${lot}`;
     tr.dataset.lot = lot;
+    tr.dataset.drawId = h.id;
     tr.style.cursor = 'pointer';
-    tr.title = `Clic para resaltar Lote ${lot} (Terminaciones ${(lot-1)%5} y ${(lot+4)%10})`;
 
-    tr.onclick = () => {
-      const isSelected = tr.classList.contains(`lot-${lot}-highlight`);
-      // Limpiar todos los resaltados previos
-      document.querySelectorAll('#historyBody tr').forEach(r => {
-        r.classList.remove('lot-1-highlight', 'lot-2-highlight', 'lot-3-highlight', 'lot-4-highlight', 'lot-5-highlight');
-      });
-      // Si no estaba seleccionado, resaltar todo el lote
-      if (!isSelected) {
-        document.querySelectorAll(`#historyBody tr[data-lot="${lot}"]`).forEach(r => {
-          r.classList.add(`lot-${lot}-highlight`);
-        });
-      }
-    };
+    const numHtml = h.nums.map(n => {
+      const tc = TERMINAL_COLORS[n % 10] || 'var(--text2)';
+      return `<span class="hist-num" style="border-color:${tc};color:${tc};">${n}</span>`;
+    }).join('');
 
-    const numHtml = h.nums.map(n => `<span class="hist-num">${n}</span>`).join('');
-    const sum = h.nums.reduce((s,n)=>s+n,0);
-    const range = h.nums[5] - h.nums[0];
+    const dateStr = h.date
+      ? `${h.date.getDate()}/${h.date.getMonth()+1}/${String(h.date.getFullYear()).slice(-2)}`
+      : '—';
 
     tr.innerHTML = `
-      <td style="color:var(--text); font-weight:700;">#${h.id}</td>
-      <td style="color:var(--text3)">${h.date.toLocaleDateString('es-MX')}</td>
+      <td>
+        <span class="lote-badge lote-badge-${lot}"></span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:${lc.bg};font-weight:700;">${lc.label}</span>
+      </td>
+      <td style="color:var(--text3);font-family:'JetBrains Mono',monospace;">${h.id}</td>
+      <td style="color:var(--text3);">${dateStr}</td>
       <td>${numHtml}</td>
-      <td style="color:var(--gold)">${sum}</td>
-      <td style="color:var(--text3)">${range}</td>
     `;
+
+    tr.onclick = () => selectDraw(h);
     body.appendChild(tr);
   });
+}
+
+let activeLotHighlight = null; // which lote is currently highlighted
+
+function selectDraw(h) {
+  const lot = getLot(h.id);
+  toggleLotFilter(lot);
+}
+
+function toggleLotFilter(lot) {
+  // Toggle: clicking same lote again clears the highlight
+  if (activeLotHighlight === lot) {
+    clearLotHighlight();
+    return;
+  }
+  applyLotHighlight(lot);
+}
+
+function applyLotHighlight(lot) {
+  activeLotHighlight = lot;
+  const lc = LOTE_COLORS[lot];
+
+  // Highlight matching rows, dim the rest
+  document.querySelectorAll('#historyBody tr').forEach(tr => {
+    const rowLot = +tr.dataset.lot;
+    tr.classList.remove('lote-active','lote-dimmed','hl-1','hl-2','hl-3','hl-4','hl-5');
+    if (rowLot === lot) {
+      tr.classList.add('lote-active', `hl-${lot}`);
+    } else {
+      tr.classList.add('lote-dimmed');
+    }
+  });
+
+  // Mark active pill button
+  document.querySelectorAll('.lote-leg-pill').forEach(p => {
+    p.classList.toggle('active-pill', +p.dataset.lot === lot);
+  });
+
+  // Update label
+  const label = document.getElementById('loteActiveLabel');
+  if (label) label.innerHTML = `Mostrando <strong style="color:${lc.bg}">Lote ${lc.label}</strong> — sorteos con terminación ${lot === 1 ? '0 y 5' : lot === 2 ? '1 y 6' : lot === 3 ? '2 y 7' : lot === 4 ? '3 y 8' : '4 y 9'}`;
+
+  selectedDrawId = lot;
+}
+
+function clearLotHighlight() {
+  activeLotHighlight = null;
+  document.querySelectorAll('#historyBody tr').forEach(tr => {
+    tr.classList.remove('lote-active','lote-dimmed','hl-1','hl-2','hl-3','hl-4','hl-5');
+  });
+  document.querySelectorAll('.lote-leg-pill').forEach(p => p.classList.remove('active-pill'));
+  const label = document.getElementById('loteActiveLabel');
+  if (label) label.textContent = '';
+  selectedDrawId = null;
 }
 
 // ============================================================
@@ -3748,29 +4364,36 @@ function computeDeltas() {
   const analysisHistory = HISTORY.slice(0, 200);
   if (analysisHistory.length === 0) return null;
 
-  // For each gap (P1→P2, P2→P3, ..., P5→P6): collect all deltas
   const gaps = Array.from({length: 5}, (_, g) => {
     const deltas = analysisHistory
       .map(h => h.nums[g + 1] - h.nums[g])
       .filter(d => d > 0);
-    const avg = deltas.reduce((s, d) => s + d, 0) / (deltas.length || 1);
+    if (deltas.length === 0) return null;
+
+    const avg = deltas.reduce((s, d) => s + d, 0) / deltas.length;
+    const variance = deltas.reduce((s, d) => s + (d - avg) ** 2, 0) / deltas.length;
+    const stddev = Math.round(Math.sqrt(variance) * 10) / 10;
     const min = Math.min(...deltas);
     const max = Math.max(...deltas);
-    // Most common delta
+
     const freq = {};
     deltas.forEach(d => freq[d] = (freq[d] || 0) + 1);
     const mode = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
+
+    // Erlang fit (for generative use)
+    const { k, mu: erlangMu } = fitErlangParams(deltas);
+
     return {
       label: `P${g+1}→P${g+2}`,
       avg: Math.round(avg * 10) / 10,
-      min, max,
+      stddev, min, max,
       mode: mode ? +mode[0] : 0,
       modeCount: mode ? +mode[1] : 0,
-      deltas,
-      freq
+      erlangK: k, erlangMu: Math.round(erlangMu * 10) / 10,
+      deltas, freq
     };
-  });
-  return gaps;
+  }).filter(Boolean);
+  return gaps.length === 5 ? gaps : null;
 }
 
 function validateDeltas(nums) {
@@ -3808,8 +4431,8 @@ function renderDeltaChart() {
             <div class="delta-range-fill" style="width:${Math.round(g.avg / maxAvg * 100)}%"></div>
           </div>
           <span class="delta-range-val">Ø ${g.avg}</span>
-          <span style="font-size:9px;color:var(--text3);margin-left:6px;">[${g.min}–${g.max}]</span>
-          <span style="font-size:9px;color:var(--gold);margin-left:6px;">Moda: ${g.mode} (${g.modeCount}x)</span>
+          <span style="font-size:9px;color:var(--text3);margin-left:6px;">[${g.min}–${g.max}] ±${g.stddev}</span>
+          <span style="font-size:9px;color:var(--gold);margin-left:6px;">Erlang(${g.erlangK}, ${g.erlangMu})</span>
         </div>
       `).join('')}
       <div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.6;">
