@@ -2081,20 +2081,28 @@ async function syncData() {
   try {
     // Intentamos cargar el archivo JSON local.
     // En un entorno de producción, esta URL apuntaría a tu API o a un archivo JSON en tu servidor.
-    const response = await fetch('melate_retro_results.json'); 
+    const response = await fetch('melate_retro_results.json');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    
+
+    // Guardar los datos descargados en localStorage
+    const currentSaved = JSON.parse(localStorage.getItem('melate_real_history') || '[]');
+    const map = new Map();
+    currentSaved.forEach(item => map.set(item.sorteo, item));
+    data.forEach(item => map.set(item.sorteo, item));
+    const merged = Array.from(map.values());
+    localStorage.setItem('melate_real_history', JSON.stringify(merged));
+
     // Pasamos los datos reales a generateData
     await generateData(data);
     console.log("Datos cargados desde JSON:", data);
-    
+
     renderGrid();
     renderAnalysis();
     renderHistory();
-    showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
+    showNotif(`✅ Sincronización Exitosa: ${data.length} sorteos actualizados`, 'success');
   } catch (error) {
     console.error("Error al cargar datos externos:", error);
     showNotif('Error de conexión o archivo no encontrado. Usando datos simulados.', 'error');
