@@ -3244,7 +3244,7 @@ function renderHistory() {
   });
 }
 
-let activeLotHighlight = null; // which lote is currently highlighted
+let activeLotHighlight = new Set(); // supports multi-select
 
 function selectDraw(h) {
   const lot = getLot(h.id);
@@ -3252,43 +3252,50 @@ function selectDraw(h) {
 }
 
 function toggleLotFilter(lot) {
-  // Toggle: clicking same lote again clears the highlight
-  if (activeLotHighlight === lot) {
+  if (activeLotHighlight.has(lot)) {
+    activeLotHighlight.delete(lot);
+  } else {
+    activeLotHighlight.add(lot);
+  }
+
+  if (activeLotHighlight.size === 0) {
     clearLotHighlight();
     return;
   }
-  applyLotHighlight(lot);
+  applyLotHighlight();
 }
 
-function applyLotHighlight(lot) {
-  activeLotHighlight = lot;
-  const lc = LOTE_COLORS[lot];
+function applyLotHighlight() {
+  const active = activeLotHighlight;
 
-  // Highlight matching rows, dim the rest
   document.querySelectorAll('#historyBody tr').forEach(tr => {
     const rowLot = +tr.dataset.lot;
     tr.classList.remove('lote-active','lote-dimmed','hl-1','hl-2','hl-3','hl-4','hl-5');
-    if (rowLot === lot) {
-      tr.classList.add('lote-active', `hl-${lot}`);
+    if (active.has(rowLot)) {
+      tr.classList.add('lote-active', `hl-${rowLot}`);
     } else {
       tr.classList.add('lote-dimmed');
     }
   });
 
-  // Mark active pill button
+  // Mark active pill buttons
   document.querySelectorAll('.lote-leg-pill').forEach(p => {
-    p.classList.toggle('active-pill', +p.dataset.lot === lot);
+    p.classList.toggle('active-pill', active.has(+p.dataset.lot));
   });
 
   // Update label
   const label = document.getElementById('loteActiveLabel');
-  if (label) label.innerHTML = `Mostrando <strong style="color:${lc.bg}">Lote ${lc.label}</strong> — sorteos con terminación ${lot === 1 ? '0 y 5' : lot === 2 ? '1 y 6' : lot === 3 ? '2 y 7' : lot === 4 ? '3 y 8' : '4 y 9'}`;
+  if (label) {
+    const termMap = {1:'0,5', 2:'1,6', 3:'2,7', 4:'3,8', 5:'4,9'};
+    const parts = [...active].sort().map(l => `<strong style="color:${['','#00C853','#E8001D','#FFB800','#4AC8FF','#9F7AFF'][l]}">L${l}(${termMap[l]})</strong>`);
+    label.innerHTML = `Mostrando: ${parts.join(' + ')}`;
+  }
 
-  selectedDrawId = lot;
+  selectedDrawId = [...active][0];
 }
 
 function clearLotHighlight() {
-  activeLotHighlight = null;
+  activeLotHighlight = new Set();
   document.querySelectorAll('#historyBody tr').forEach(tr => {
     tr.classList.remove('lote-active','lote-dimmed','hl-1','hl-2','hl-3','hl-4','hl-5');
   });
