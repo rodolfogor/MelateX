@@ -2077,40 +2077,18 @@ function updateNextDraw() {
 }
 
 async function syncData() {
-  showNotif('Disparando actualización en GitHub...', 'info');
+  showNotif('Buscando datos actualizados...', 'info');
 
   try {
-    // 1. Disparamos el workflow real (scraper) a través de la función serverless
-    const triggerRes = await fetch('/api/sync-trigger', { method: 'POST' });
-    if (!triggerRes.ok) {
-      const errBody = await triggerRes.json().catch(() => ({}));
-      throw new Error(errBody.error || `HTTP ${triggerRes.status}`);
+    // Leemos el archivo JSON del repo (cache-busting para evitar versiones viejas guardadas por el navegador)
+    const response = await fetch(`melate_retro_results.json?t=${Date.now()}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
 
-    showNotif('Actualizando datos en GitHub, esto toma ~30-60 segundos...', 'info');
-
-    // 2. Guardamos el sorteo más reciente que ya conocemos, para detectar el cambio
-    const before = await fetch(`melate_retro_results.json?t=${Date.now()}`)
-      .then(r => r.json()).catch(() => null);
-    const beforeLatest = before?.[0]?.sorteo;
-
-    // 3. Esperamos a que el archivo cambie (máx ~90 segundos, revisando cada 5s)
-    let data = before;
-    let updated = false;
-    for (let i = 0; i < 18; i++) {
-      await new Promise(r => setTimeout(r, 5000));
-      const check = await fetch(`melate_retro_results.json?t=${Date.now()}`)
-        .then(r => r.json()).catch(() => null);
-      if (check && check[0]?.sorteo !== beforeLatest) {
-        data = check;
-        updated = true;
-        break;
-      }
-    }
-
-    // 4. Guardamos los datos sincronizados en localStorage (igual que la importación manual)
-    //    para que sobrevivan a recargas de página, no solo a la sesión actual.
-    if (data && Array.isArray(data) && data.length > 0) {
+    // Guardamos en localStorage (igual que la importación manual) para que sobreviva a recargas
+    if (Array.isArray(data) && data.length > 0) {
       const currentSaved = JSON.parse(localStorage.getItem('melate_real_history') || '[]');
       const map = new Map();
       currentSaved.forEach(item => map.set(item.sorteo, item));
@@ -2118,20 +2096,16 @@ async function syncData() {
       localStorage.setItem('melate_real_history', JSON.stringify(Array.from(map.values())));
     }
 
-    // 5. Pintamos lo que tengamos (actualizado o no) en la app
     await generateData(data);
+    console.log("Datos cargados desde JSON:", data);
+
     renderGrid();
     renderAnalysis();
     renderHistory();
-
-    if (updated) {
-      showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
-    } else {
-      showNotif('El workflow sigue corriendo. Dale clic a Sincronizar de nuevo en un momento.', 'warning');
-    }
+    showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
   } catch (error) {
-    console.error("Error al sincronizar:", error);
-    showNotif('Error al disparar la actualización: ' + error.message, 'error');
+    console.error("Error al cargar datos externos:", error);
+    showNotif('Error de conexión o archivo no encontrado.', 'error');
   }
 }
 
