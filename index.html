@@ -2077,33 +2077,51 @@ function updateNextDraw() {
 }
 
 async function syncData() {
-  showNotif('Conectando con servidor de resultados reales...', 'info');
-  
+  showNotif('Disparando actualización en GitHub...', 'info');
+
   try {
-    // Intentamos cargar el archivo JSON local.
-    // En un entorno de producción, esta URL apuntaría a tu API o a un archivo JSON en tu servidor.
-    const response = await fetch('melate_retro_results.json'); 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // 1. Disparamos el workflow real (scraper) a través de la función serverless
+    const triggerRes = await fetch('/api/sync-trigger', { method: 'POST' });
+    if (!triggerRes.ok) {
+      const errBody = await triggerRes.json().catch(() => ({}));
+      throw new Error(errBody.error || `HTTP ${triggerRes.status}`);
     }
-    const data = await response.json();
-    
-    // Pasamos los datos reales a generateData
+
+    showNotif('Actualizando datos en GitHub, esto toma ~30-60 segundos...', 'info');
+
+    // 2. Guardamos el sorteo más reciente que ya conocemos, para detectar el cambio
+    const before = await fetch(`melate_retro_results.json?t=${Date.now()}`)
+      .then(r => r.json()).catch(() => null);
+    const beforeLatest = before?.[0]?.sorteo;
+
+    // 3. Esperamos a que el archivo cambie (máx ~90 segundos, revisando cada 5s)
+    let data = before;
+    let updated = false;
+    for (let i = 0; i < 18; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const check = await fetch(`melate_retro_results.json?t=${Date.now()}`)
+        .then(r => r.json()).catch(() => null);
+      if (check && check[0]?.sorteo !== beforeLatest) {
+        data = check;
+        updated = true;
+        break;
+      }
+    }
+
+    // 4. Pintamos lo que tengamos (actualizado o no) en la app
     await generateData(data);
-    console.log("Datos cargados desde JSON:", data);
-    
     renderGrid();
     renderAnalysis();
     renderHistory();
-    showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
+
+    if (updated) {
+      showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
+    } else {
+      showNotif('El workflow sigue corriendo. Dale clic a Sincronizar de nuevo en un momento.', 'warning');
+    }
   } catch (error) {
-    console.error("Error al cargar datos externos:", error);
-    showNotif('Error de conexión o archivo no encontrado. Usando datos simulados.', 'error');
-    // Si falla la carga del JSON, volvemos a generar datos simulados
-    await generateData();
-    renderGrid();
-    renderAnalysis();
-    renderHistory();
+    console.error("Error al sincronizar:", error);
+    showNotif('Error al disparar la actualización: ' + error.message, 'error');
   }
 }
 
