@@ -2108,7 +2108,17 @@ async function syncData() {
       }
     }
 
-    // 4. Pintamos lo que tengamos (actualizado o no) en la app
+    // 4. Guardamos los datos sincronizados en localStorage (igual que la importación manual)
+    //    para que sobrevivan a recargas de página, no solo a la sesión actual.
+    if (data && Array.isArray(data) && data.length > 0) {
+      const currentSaved = JSON.parse(localStorage.getItem('melate_real_history') || '[]');
+      const map = new Map();
+      currentSaved.forEach(item => map.set(item.sorteo, item));
+      data.forEach(item => map.set(item.sorteo, item));
+      localStorage.setItem('melate_real_history', JSON.stringify(Array.from(map.values())));
+    }
+
+    // 5. Pintamos lo que tengamos (actualizado o no) en la app
     await generateData(data);
     renderGrid();
     renderAnalysis();
