@@ -1848,7 +1848,6 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
                   <th>#</th>
                   <th>Fecha</th>
                   <th>Números</th>
-                  <th>Adicional</th>
                 </tr>
               </thead>
               <tbody id="historyBody"></tbody>
@@ -3235,8 +3234,8 @@ function renderHistory() {
       : '—';
 
     const adicionalHtml = (h.adicional !== null && h.adicional !== undefined)
-      ? `<span class="hist-num" style="background:transparent;border:1px dashed var(--text3);color:var(--text2);">${h.adicional}</span>`
-      : '<span style="color:var(--text3);">—</span>';
+      ? `<span style="margin:0 4px;color:var(--text3);">-</span><span class="hist-num" style="background:transparent;border:1px dashed var(--text3);color:var(--text2);">${h.adicional}</span>`
+      : '';
 
     tr.innerHTML = `
       <td>
@@ -3245,8 +3244,7 @@ function renderHistory() {
       </td>
       <td style="color:var(--text3);font-family:'JetBrains Mono',monospace;">${h.id}</td>
       <td style="color:var(--text3);">${dateStr}</td>
-      <td>${numHtml}</td>
-      <td>${adicionalHtml}</td>
+      <td>${numHtml}${adicionalHtml}</td>
     `;
 
     tr.onclick = () => selectDraw(h);
