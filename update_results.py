@@ -51,8 +51,8 @@ def scrape_melate_retro():
         except (ValueError, IndexError):
             continue
 
-    # El CSV viene ordenado del sorteo más reciente al más viejo; tomamos los últimos 25
-    results = results[:25]
+    # El CSV trae el histórico completo desde el inicio del juego; lo guardamos todo
+    print(f"Se encontraron {len(results)} sorteos en el CSV.")
 
     if results:
         with open('melate_retro_results.json', 'w', encoding='utf-8') as f:
