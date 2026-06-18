@@ -1848,6 +1848,7 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
                   <th>#</th>
                   <th>Fecha</th>
                   <th>Números</th>
+                  <th>Adicional</th>
                 </tr>
               </thead>
               <tbody id="historyBody"></tbody>
@@ -1931,6 +1932,7 @@ async function generateData(externalData = null) {
         id: item.sorteo || item.id,
         date: d,
         nums: typeof item.combinacion === 'string' ? item.combinacion.split(',').map(Number).sort((a, b) => a - b) : item.nums,
+        adicional: item.adicional ?? null,
         bolsa: item.bolsa || 0
       };
     }).sort((a, b) => b.id - a.id);
@@ -2135,13 +2137,14 @@ function processDataString(input) {
     if (line.toLowerCase().includes('nproducto') || !line.trim()) return;
     
     const parts = line.split(',');
-    let sorteo, fechaRaw, combinacion, bolsa = 0;
+    let sorteo, fechaRaw, combinacion, adicional = null, bolsa = 0;
 
     if (parts.length >= 11) {
       // Nuevo formato: NPRODUCTO,CONCURSO,F1,F2,F3,F4,F5,F6,F7,BOLSA,FECHA
       sorteo = parseInt(parts[1]?.trim());
       fechaRaw = parts[10]?.trim();
       combinacion = parts.slice(2, 8).map(n => n.trim()).join(',');
+      adicional = parseInt(parts[8]?.trim());
       bolsa = parseFloat(parts[9]?.trim()) || 0;
     } else if (parts.length >= 8) {
       // Formato anterior: Sorteo, Fecha, N1, N2, N3, N4, N5, N6
@@ -2165,7 +2168,7 @@ function processDataString(input) {
     }
 
     if (!isNaN(sorteo) && fechaIso) {
-      newResults.push({ sorteo, fecha: fechaIso, combinacion, bolsa });
+      newResults.push({ sorteo, fecha: fechaIso, combinacion, adicional, bolsa });
     }
   });
 
@@ -3231,6 +3234,10 @@ function renderHistory() {
       ? `${h.date.getDate()}/${h.date.getMonth()+1}/${String(h.date.getFullYear()).slice(-2)}`
       : '—';
 
+    const adicionalHtml = (h.adicional !== null && h.adicional !== undefined)
+      ? `<span class="hist-num" style="background:transparent;border:1px dashed var(--text3);color:var(--text2);">${h.adicional}</span>`
+      : '<span style="color:var(--text3);">—</span>';
+
     tr.innerHTML = `
       <td>
         <span class="lote-badge lote-badge-${lot}"></span>
@@ -3239,6 +3246,7 @@ function renderHistory() {
       <td style="color:var(--text3);font-family:'JetBrains Mono',monospace;">${h.id}</td>
       <td style="color:var(--text3);">${dateStr}</td>
       <td>${numHtml}</td>
+      <td>${adicionalHtml}</td>
     `;
 
     tr.onclick = () => selectDraw(h);
