@@ -36,6 +36,7 @@ def scrape_melate_retro():
         try:
             sorteo = int(parts[1].strip())
             combinacion = ",".join(p.strip().zfill(2) for p in parts[2:8])  # F1-F6 (6 números)
+            adicional = int(parts[8].strip())  # F7 (número adicional)
             bolsa = float(parts[9].strip()) if parts[9].strip() else 0
 
             # Fecha viene como DD/MM/YYYY, la convertimos a YYYY-MM-DD
@@ -46,6 +47,7 @@ def scrape_melate_retro():
                 "sorteo": sorteo,
                 "fecha": fecha_iso,
                 "combinacion": combinacion,
+                "adicional": adicional,
                 "bolsa": bolsa
             })
         except (ValueError, IndexError):
