@@ -1954,7 +1954,7 @@ function getLot(id) {
 
 function updateCalculatedData() {
   // Limitamos el análisis a los últimos 25 sorteos para detectar tendencias actuales
-  const analysisHistory = HISTORY.slice(0, 200);
+  const analysisHistory = HISTORY.slice(0, 25);
   const totalHistory = analysisHistory.length || 1;
 
   // Frecuencias
@@ -2726,8 +2726,8 @@ function fuseProbMasses(pmL, pmI, pmG, excludeNums) {
 function buildPositionCDF(pos, excludeNums = []) {
   const range = POS_RANGES[pos];
 
-  // Global: last 200
-  const globalDraws = HISTORY.slice(0, 200);
+  // Global: last 25
+  const globalDraws = HISTORY.slice(0, 25);
   if (globalDraws.length === 0) return null;
   const pmG = freqToProbMass(buildFreqMap(globalDraws, pos), excludeNums, range);
 
@@ -2832,7 +2832,7 @@ function generateWithRejection(generatorFn, tries = MAX_TRIES) {
 // Puntúa cada número según su distancia al promedio histórico de Ppos.
 // ════════════════════════════════════════════════════════════════════
 function computePositionNormalStats(pos) {
-  const draws = HISTORY.slice(0, 200);
+  const draws = HISTORY.slice(0, 25);
   const vals = draws.map(h => h.nums[pos]).filter(Boolean);
   if (vals.length === 0) return null;
   const mu = vals.reduce((s, n) => s + n, 0) / vals.length;
@@ -2923,7 +2923,7 @@ function generateByErlangConvolution(startNum) {
 // p = frecuencia histórica; E[X] = 1/p (esperanza geométrica)
 // ════════════════════════════════════════════════════════════════════
 function computeGeometricDebt() {
-  const draws = HISTORY.slice(0, 200);
+  const draws = HISTORY.slice(0, 25);
   const total = draws.length || 1;
   const result = {};
 
@@ -3832,7 +3832,7 @@ function computeLoteDirectionality(pos) {
 
 function computeFallbackDirectionality(pos) {
   // Uses all history when lote data is insufficient
-  const draws = HISTORY.slice(0, 200);
+  const draws = HISTORY.slice(0, 25);
   if (draws.length < 3) return null;
 
   const refNum = draws[0].nums[pos];
@@ -3886,7 +3886,7 @@ function computeFallbackDirectionality(pos) {
 // pair in the last 25 draws, regardless of lote.
 // ════════════════════════════════════════════════════════════════════
 function computeImmediateDirectionality(pos) {
-  const draws = HISTORY.slice(0, 200);
+  const draws = HISTORY.slice(0, 25);
   if (draws.length < 4) return null;
 
   const refNum = draws[0].nums[pos]; // most-recent draw's number for this pos
@@ -4235,7 +4235,7 @@ function computeMarkov() {
   // For every number X that appears anywhere in draw[i],
   // record ALL 6 numbers of draw[i-1] (the next draw) as successors.
   // This multiplies training data by 6 and captures cross-position attraction.
-  const draws = HISTORY.slice(0, 200);
+  const draws = HISTORY.slice(0, 25);
   if (draws.length < 4) return null;
 
   // globalMap: prevNum (1-39) → Map(nextNum → count)
@@ -4395,7 +4395,7 @@ function quickSelectNum(n) {
 // ════════════════════════════════════════════════════════════════════
 
 function computeDeltas() {
-  const analysisHistory = HISTORY.slice(0, 200);
+  const analysisHistory = HISTORY.slice(0, 25);
   if (analysisHistory.length === 0) return null;
 
   const gaps = Array.from({length: 5}, (_, g) => {
