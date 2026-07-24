@@ -1231,6 +1231,12 @@ body {
   /* Directionality table */
   #directionalityTable { overflow-x: auto; }
   #directionalityTable table { min-width: 500px; }
+
+  /* Efectividad / Backtesting tab */
+  #content-efectividad .analysis-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  #btPosGrid { grid-template-columns: repeat(3, 1fr) !important; }
+  #btPosGridStrict { grid-template-columns: repeat(3, 1fr) !important; }
+  #btAuditTable { font-size: 9px; min-width: 720px; }
 }
 
 /* ══════════════════════════════════════════════
@@ -1242,6 +1248,7 @@ body {
   .analysis-grid { grid-template-columns: 1fr; }
   .pos-prob-grid { grid-template-columns: repeat(3, 1fr); }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
+  #content-efectividad .analysis-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 /* ══════════════════════════════════════════════
@@ -1620,6 +1627,9 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
   <div class="nav-tab" onclick="switchTab('datos')" id="tab-datos">
     ⚙️ Gestor de Datos
   </div>
+  <div class="nav-tab" onclick="switchTab('efectividad')" id="tab-efectividad">
+    🎯 Efectividad
+  </div>
 </div>
 
 <!-- APP BODY -->
@@ -1691,7 +1701,7 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 
       <!-- SEQUENTIAL ASSISTANT (below grid) -->
       <div class="seq-assist" id="seqAssist" style="margin-top:14px;">
-        <div class="seq-title">⚡ Asistente Secuencial</div>
+        <div class="seq-title">⚡ Asistente Secuencial <span id="seqBacktestBadge" style="display:none;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;margin-left:6px;color:var(--text3);"></span></div>
         <div class="seq-hint" id="seqHint">Selecciona el primer número para activar las sugerencias inteligentes de secuencia.</div>
         <div class="seq-range-alert" id="seqRangeAlert" style="display:none;"></div>
       </div>
@@ -1873,6 +1883,129 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
           <button class="btn-secondary" onclick="clearSavedData()">Limpiar Base de Datos</button>
         </div>
         <div id="importStatus" style="margin-top: 12px; font-size: 11px;"></div>
+      </div>
+    </div>
+
+    <!-- TAB: EFECTIVIDAD / BACKTESTING -->
+    <div class="tab-content" id="content-efectividad">
+
+      <div class="section-title" style="margin-bottom:12px;">🎯 Auditoría de Efectividad y Backtesting</div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6;">
+        Recorre el historial sorteo por sorteo, reconstruyendo el modelo solo con datos anteriores a cada fecha, para medir qué reglas y el Asistente Secuencial habrían acertado.
+      </p>
+
+      <!-- Controls -->
+      <div class="analysis-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--text2);">Sorteos a evaluar:</span>
+          <select id="btLimitSelect" style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-size:12px;">
+            <option value="25">Últimos 25</option>
+            <option value="50">Últimos 50</option>
+            <option value="100" selected>Últimos 100</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="btRunBtn" onclick="runBacktest()" style="font-size:12px;padding:8px 16px;">
+          ▶ Ejecutar Auditoría
+        </button>
+        <div id="btProgressWrap" style="display:none;flex:1;min-width:160px;align-items:center;gap:8px;">
+          <div class="health-bar-bg" style="flex:1;">
+            <div class="health-bar-fill" id="btProgressFill" style="background:var(--red);"></div>
+          </div>
+          <span id="btProgressLabel" style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap;">0%</span>
+        </div>
+      </div>
+
+      <div id="btEmptyState" style="text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;">
+        Pulsa <strong>Ejecutar Auditoría</strong> para calcular la efectividad histórica de cada regla y del Asistente Secuencial.
+      </div>
+
+      <div id="btResults" style="display:none;">
+
+        <!-- KPI CARDS -->
+        <div class="analysis-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+          <div class="analysis-card">
+            <div class="analysis-card-title">🏆 Algoritmo Líder</div>
+            <div id="kpiLeader" style="font-size:16px;font-weight:700;color:var(--gold);margin-top:6px;">—</div>
+            <div id="kpiLeaderSub" style="font-size:10px;color:var(--text3);margin-top:2px;">—</div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-title">⚡ Asistente Secuencial</div>
+            <div id="kpiSeq" style="font-size:16px;font-weight:700;color:var(--red);margin-top:6px;">—</div>
+            <div id="kpiSeqSub" style="font-size:10px;color:var(--text3);margin-top:2px;">aciertos promedio / 6</div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-title">🟢 Cobertura del Pool</div>
+            <div id="kpiPool" style="font-size:16px;font-weight:700;color:var(--green);margin-top:6px;">—</div>
+            <div id="kpiPoolSub" style="font-size:10px;color:var(--text3);margin-top:2px;">aciertos promedio / 6</div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-title">🧬 Herencia Dominante</div>
+            <div id="kpiHerencia" style="font-size:16px;font-weight:700;color:#4AC8FF;margin-top:6px;">—</div>
+            <div id="kpiHerenciaSub" style="font-size:10px;color:var(--text3);margin-top:2px;">Inmediata vs. Lote</div>
+          </div>
+          <div class="analysis-card">
+            <div class="analysis-card-title">❤️ Tasa de Salud</div>
+            <div id="kpiSalud" style="font-size:16px;font-weight:700;color:var(--text);margin-top:6px;">—</div>
+            <div id="kpiSaludSub" style="font-size:10px;color:var(--text3);margin-top:2px;">sorteos ganadores saludables</div>
+          </div>
+        </div>
+
+        <!-- POSITIONAL BREAKDOWN -->
+        <div class="section-title" style="margin-bottom:12px;">📍 Efectividad por Posición del Asistente Secuencial</div>
+        <div id="btPosGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px;"></div>
+
+        <!-- STRICT INTERSECTION (AND: Pool/Hot ∩ Top-5%) -->
+        <div class="section-title" style="margin-bottom:6px;">🔒 Intersección Estricta <span style="font-size:10px;color:var(--text3);font-weight:400;">(resaltado en cuadrícula Y en el top-5% de las tarjetas, a la vez)</span></div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+          Un número solo cuenta aquí si <strong>ambas</strong> señales del asistente coinciden en él: el filtro Pool/Hot de la cuadrícula <strong>y</strong> el top-5 de probabilidad de las tarjetas. Es más selectivo que la efectividad general de arriba (menos aciertos, pero con doble confirmación).
+        </p>
+        <div class="analysis-card" style="margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+          <div>
+            <div class="analysis-card-title">Aciertos promedio (AND)</div>
+            <div id="kpiStrict" style="font-size:16px;font-weight:700;color:#9F7AFF;margin-top:6px;">—</div>
+          </div>
+          <div>
+            <div class="analysis-card-title">% de los aciertos totales con doble confirmación</div>
+            <div id="kpiStrictShare" style="font-size:16px;font-weight:700;color:#9F7AFF;margin-top:6px;">—</div>
+          </div>
+        </div>
+        <div id="btPosGridStrict" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px;"></div>
+
+        <!-- RANKING BARS -->
+        <div class="section-title" style="margin-bottom:12px;">📊 Ranking Global de Efectividad</div>
+        <div class="analysis-card" style="margin-bottom:20px;">
+          <div id="btRankingBars"></div>
+        </div>
+
+        <!-- STRATEGIC ANALYSIS & CONCLUSIONS -->
+        <div class="section-title" style="margin-bottom:12px;">💡 Análisis Estratégico &amp; Conclusiones</div>
+        <div class="analysis-card" style="margin-bottom:20px;border-left:3px solid var(--gold);">
+          <div id="btStrategicAnalysis" style="font-size:12px;line-height:1.9;color:var(--text2);"></div>
+        </div>
+
+        <!-- HISTORICAL AUDIT TABLE -->
+        <div class="section-title" style="margin-bottom:12px;">📋 Auditoría Histórica por Sorteo</div>
+        <div style="overflow-x:auto;">
+          <table class="history-table" id="btAuditTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Combinación</th>
+                <th>Secuencial</th>
+                <th>Sec. Estricta 🔒</th>
+                <th>Hot</th>
+                <th>H. Inmediata</th>
+                <th>H. Lote</th>
+                <th>Deuda</th>
+                <th>Salud</th>
+                <th>Función Top</th>
+              </tr>
+            </thead>
+            <tbody id="btAuditBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -2465,7 +2598,7 @@ function updateHealth() {
 
 function getSeqSuggestions() {
   const suggestions = new Set();
-  if(currentSelection.length === 0 || currentSelection.length >= 6) return suggestions;
+  if(currentSelection.length >= 6) return suggestions;
 
   const pos = currentSelection.length; // next position (0-indexed)
   const range = POS_RANGES[pos];
@@ -2493,12 +2626,6 @@ function updateSeqAssistant() {
   const hint = document.getElementById('seqHint');
   const rangeAlert = document.getElementById('seqRangeAlert');
 
-  if(currentSelection.length === 0) {
-    hint.textContent = 'Selecciona el primer número para activar las sugerencias inteligentes de secuencia.';
-    rangeAlert.style.display = 'none';
-    return;
-  }
-
   if(currentSelection.length >= 6) {
     hint.textContent = '✅ Combinación completa. Guarda el boleto o usa Randomize para ajustar.';
     rangeAlert.style.display = 'none';
@@ -2510,6 +2637,17 @@ function updateSeqAssistant() {
   const posNames = ['1ª','2ª','3ª','4ª','5ª','6ª'];
   const sugSet = getSeqSuggestions();
   const suggestions = [...sugSet].slice(0,5);
+
+  // Badge de confianza histórica basado en el último backtest ejecutado
+  const badgeEl = document.getElementById('seqBacktestBadge');
+  if (badgeEl) {
+    if (BACKTEST_DATA && BACKTEST_DATA.posStats && BACKTEST_DATA.posStats[pos]) {
+      badgeEl.style.display = 'inline-block';
+      badgeEl.textContent = `Precisión histórica P${pos + 1}: ${BACKTEST_DATA.posStats[pos].pct}%`;
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
 
   const itSugg = getInverseTransformSuggestions(pos, currentSelection);
   const ns = ensureNormalStats();
@@ -2575,7 +2713,11 @@ function updateSeqAssistant() {
     ? `µ=${normStat.mu} σ=${normStat.sigma} · <span style="color:var(--green)">±1σ=[${Math.round(normStat.mu-normStat.sigma)}–${Math.round(normStat.mu+normStat.sigma)}]</span>`
     : '';
 
-  hint.innerHTML = `💡 <strong>P${posNames[pos]}:</strong> ${range.min}–${range.max} &nbsp;${normInfo}<br>
+  const headerLabel = pos === 0
+    ? `🎯 <strong>Elige tu primer número (P1):</strong> ${range.min}–${range.max}`
+    : `💡 <strong>P${posNames[pos]}:</strong> ${range.min}–${range.max}`;
+
+  hint.innerHTML = `${headerLabel} &nbsp;${normInfo}<br>
     <div style="display:flex;gap:6px;margin-top:3px;font-size:9px;color:var(--text3);align-items:center;">
       <span style="color:var(--gold);font-weight:700;">█ Top prob.</span>&nbsp;
       <span style="color:var(--green);font-weight:700;">█ Candidatos</span>&nbsp;·&nbsp;
@@ -2982,6 +3124,492 @@ function pickRandom(arr, n) {
   return shuffled.slice(0, n);
 }
 
+// ════════════════════════════════════════════════════════════════════
+// MÓDULO DE AUDITORÍA DE EFECTIVIDAD Y BACKTESTING
+// Recorre HISTORY retroactivamente, reconstruyendo el estado del modelo
+// (HOT/COLD/POOL/Herencia/Deuda/Estadísticas) usando ÚNICAMENTE los
+// sorteos anteriores a cada uno, y mide qué reglas + el Asistente
+// Secuencial habrían acertado. Se ejecuta por bloques (chunking) para
+// no bloquear la UI en móviles.
+// ════════════════════════════════════════════════════════════════════
+
+const HEALTH_PASS_THRESHOLD = 60;
+
+// Salud de una combinación ganadora ya conocida, usando el estado del
+// modelo (PRIMES/POOL/INHERITED/etc.) ya reconstruido para ese punto.
+function computeComboHealth(nums) {
+  let score = 0;
+  const primes = nums.filter(n => PRIMES.has(n)).length;
+  const pool = nums.filter(n => POOL.has(n)).length;
+  const inheritance = nums.filter(n => INHERITED.has(n)).length;
+  const evens = nums.filter(n => n % 2 === 0).length;
+
+  if (primes >= 1 && primes <= 3) score += 25;
+  if (pool >= 3) score += 35;
+  if (inheritance >= 1) score += 15;
+  if (evens >= 2 && evens <= 4) score += 25;
+  if (primes === 6 || primes === 0) score -= 20;
+  if (evens === 6 || evens === 0) score -= 20;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+// Conjunto de números "sugeridos" para una posición dada, replicando
+// exactamente la lógica visual de la cuadrícula (getSeqSuggestions)
+// más el top-5 del Asistente Secuencial de triple fuente (Inverse Transform).
+function seqSuggestedSetForPos(pos, selectionSoFar) {
+  const meta = new Map(); // num -> { criteria: Set, top5Rank: number|null, top5Pct: number|null }
+  const getEntry = (n) => {
+    if (!meta.has(n)) meta.set(n, { criteria: new Set(), top5Rank: null, top5Pct: null });
+    return meta.get(n);
+  };
+
+  // 1) Lógica de cuadrícula (POOL dentro del rango de la posición)
+  const range = POS_RANGES[pos];
+  let poolTagged = 0;
+  for (let n = range.min; n <= range.max; n++) {
+    if (!selectionSoFar.includes(n) && POOL.has(n)) {
+      getEntry(n).criteria.add('pool');
+      poolTagged++;
+    }
+  }
+  // Si hay pocos candidatos de Pool en el rango, se complementa con Hot
+  if (poolTagged < 4) {
+    for (let n = range.min; n <= range.max; n++) {
+      if (!selectionSoFar.includes(n) && HOT.has(n)) {
+        getEntry(n).criteria.add('hot');
+      }
+    }
+  }
+
+  // 2) Top-5 del Asistente Secuencial (triple fuente: Lote/Inmediato/Global)
+  const itSugg = getInverseTransformSuggestions(pos, selectionSoFar);
+  const top5 = itSugg.slice(0, 5);
+  top5.forEach((s, idx) => {
+    const e = getEntry(s.num);
+    e.criteria.add('top5');
+    e.top5Rank = idx + 1;
+    e.top5Pct = s.pct;
+  });
+
+  return { set: new Set(meta.keys()), meta, top5 };
+}
+
+// Top-N números más "atrasados" según la Deuda Geométrica (ya recalculada
+// para el estado retroactivo vigente).
+function topDebtNumbers(n = 10) {
+  const gd = ensureGeoDebt();
+  return new Set(
+    Object.entries(gd)
+      .sort((a, b) => b[1].score - a[1].score)
+      .slice(0, n)
+      .map(x => +x[0])
+  );
+}
+
+let BACKTEST_DATA = null; // cache del último resultado
+
+async function runBacktest() {
+  const limitSel = document.getElementById('btLimitSelect').value;
+  const runBtn = document.getElementById('btRunBtn');
+  const progressWrap = document.getElementById('btProgressWrap');
+  const progressFill = document.getElementById('btProgressFill');
+  const progressLabel = document.getElementById('btProgressLabel');
+  const emptyState = document.getElementById('btEmptyState');
+  const resultsBox = document.getElementById('btResults');
+
+  if (HISTORY.length < 5) {
+    showNotif('Se necesitan al menos 5 sorteos en el historial para auditar.', 'warning');
+    return;
+  }
+
+  // Guardamos el estado real del modelo para restaurarlo al terminar
+  const snapshot = {
+    HISTORY: HISTORY.slice(),
+    FREQ: { ...FREQ }, HOT, COLD, POOL, INHERITED,
+    IMMEDIATE_NATURALS, IMMEDIATE_PARTNERS, LOTE_NATURALS, LOTE_PARTNERS,
+    CRITICAL_PARTNERS, DEBT: { ...DEBT }, POS_PROB, GEO_DEBT, NORMAL_STATS
+  };
+
+  const fullHistory = HISTORY.slice(); // orden descendente: [0] = más reciente
+  const maxEvaluable = fullHistory.length - 3; // necesitamos >=3 sorteos previos para Herencia/Deuda mínimamente útiles
+  let limit = limitSel === 'all' ? maxEvaluable : Math.min(parseInt(limitSel, 10), maxEvaluable);
+  if (limit < 1) limit = Math.max(1, maxEvaluable);
+
+  runBtn.disabled = true;
+  runBtn.textContent = '⏳ Auditando...';
+  progressWrap.style.display = 'flex';
+  emptyState.style.display = 'none';
+  resultsBox.style.display = 'none';
+  progressFill.style.width = '0%';
+  progressLabel.textContent = '0%';
+
+  const rows = [];
+  const CHUNK_SIZE = 5;
+  let k = 0;
+
+  await new Promise(resolve => {
+    function processChunk() {
+      const chunkEnd = Math.min(k + CHUNK_SIZE, limit);
+      for (; k < chunkEnd; k++) {
+        const draw = fullHistory[k];
+        // Reconstruimos el modelo usando SOLO sorteos anteriores a "draw"
+        HISTORY = fullHistory.slice(k + 1);
+        if (HISTORY.length === 0) continue;
+        GEO_DEBT = null;
+        NORMAL_STATS = null;
+        updateCalculatedData();
+
+        const nums = draw.nums.slice().sort((a, b) => a - b);
+
+        // --- Reglas simples: intersección directa con el sorteo real ---
+        const aciertosHot = nums.filter(n => HOT.has(n)).length;
+        const aciertosPool = nums.filter(n => POOL.has(n)).length;
+        const aciertosInmediata = nums.filter(n => IMMEDIATE_NATURALS.has(n) || IMMEDIATE_PARTNERS.has(n)).length;
+        const aciertosLote = nums.filter(n => LOTE_NATURALS.has(n) || LOTE_PARTNERS.has(n)).length;
+        const debtSet = topDebtNumbers(10);
+        const aciertosDeuda = nums.filter(n => debtSet.has(n)).length;
+        const saludScore = computeComboHealth(nums);
+        const saludOk = saludScore >= HEALTH_PASS_THRESHOLD;
+
+        // --- Asistente Secuencial: simulación posición por posición ---
+        // "hit" (OR) = ya lo teníamos: Pool/Hot por rango  ó  Top-5% de las tarjetas.
+        // "strictHit" (AND, Intersección Estricta) = NUEVO: solo cuenta si el número
+        // aparece en AMBAS señales a la vez (Pool/Hot por rango  Y  Top-5% de las tarjetas).
+        const posHits = new Array(6).fill(false);
+        const posHitsEstricto = new Array(6).fill(false);
+        const posDetails = [];
+        let aciertosSecuencial = 0;
+        let aciertosSecuencialEstricto = 0;
+        for (let pos = 0; pos < 6; pos++) {
+          const selectionSoFar = nums.slice(0, pos);
+          const { set: suggested, meta } = seqSuggestedSetForPos(pos, selectionSoFar);
+          const num = nums[pos];
+          const hit = suggested.has(num);
+          if (hit) {
+            posHits[pos] = true;
+            aciertosSecuencial++;
+          }
+          const entry = meta.get(num);
+          const criteriaArr = entry ? [...entry.criteria] : [];
+          const strictHit = criteriaArr.includes('top5') && (criteriaArr.includes('pool') || criteriaArr.includes('hot'));
+          if (strictHit) {
+            posHitsEstricto[pos] = true;
+            aciertosSecuencialEstricto++;
+          }
+          posDetails.push({
+            pos, num, hit, strictHit,
+            criteria: criteriaArr,
+            top5Rank: entry ? entry.top5Rank : null,
+            top5Pct: entry ? entry.top5Pct : null,
+          });
+        }
+
+        // Función más efectiva de este sorteo (se mantiene igual que antes, sin el criterio estricto)
+        const ruleScores = {
+          'Secuencial': aciertosSecuencial,
+          'Hot': aciertosHot,
+          'H. Inmediata': aciertosInmediata,
+          'H. Lote': aciertosLote,
+          'Deuda': aciertosDeuda,
+        };
+        const topFunc = Object.entries(ruleScores).sort((a, b) => b[1] - a[1])[0][0];
+
+        rows.push({
+          id: draw.id,
+          date: draw.date,
+          nums,
+          aciertosSecuencial, posHits, posDetails,
+          aciertosSecuencialEstricto, posHitsEstricto,
+          aciertosHot, aciertosPool, aciertosInmediata, aciertosLote, aciertosDeuda,
+          saludScore, saludOk,
+          topFunc
+        });
+      }
+
+      const pct = Math.round((k / limit) * 100);
+      progressFill.style.width = pct + '%';
+      progressLabel.textContent = `${pct}% (${k}/${limit})`;
+
+      if (k < limit) {
+        setTimeout(processChunk, 0);
+      } else {
+        resolve();
+      }
+    }
+    // Usamos requestAnimationFrame cuando esté disponible para sincronizar con el repintado
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(processChunk);
+    else setTimeout(processChunk, 0);
+  });
+
+  // Restauramos el estado real del modelo (no queremos dejar el live-app en un estado retroactivo)
+  HISTORY = snapshot.HISTORY;
+  Object.assign(FREQ, snapshot.FREQ);
+  HOT = snapshot.HOT; COLD = snapshot.COLD; POOL = snapshot.POOL; INHERITED = snapshot.INHERITED;
+  IMMEDIATE_NATURALS = snapshot.IMMEDIATE_NATURALS; IMMEDIATE_PARTNERS = snapshot.IMMEDIATE_PARTNERS;
+  LOTE_NATURALS = snapshot.LOTE_NATURALS; LOTE_PARTNERS = snapshot.LOTE_PARTNERS;
+  CRITICAL_PARTNERS = snapshot.CRITICAL_PARTNERS;
+  Object.assign(DEBT, snapshot.DEBT);
+  POS_PROB = snapshot.POS_PROB; GEO_DEBT = snapshot.GEO_DEBT; NORMAL_STATS = snapshot.NORMAL_STATS;
+  renderGrid(); renderAnalysis(); renderHistory();
+
+  BACKTEST_DATA = aggregateBacktest(rows);
+  renderBacktestResults(BACKTEST_DATA);
+
+  runBtn.disabled = false;
+  runBtn.textContent = '▶ Ejecutar Auditoría';
+  progressWrap.style.display = 'none';
+  resultsBox.style.display = 'block';
+  showNotif(`Auditoría completa: ${rows.length} sorteos evaluados`, 'success');
+}
+
+function aggregateBacktest(rows) {
+  const n = rows.length || 1;
+  const avg = (key) => rows.reduce((s, r) => s + r[key], 0) / n;
+
+  const ruleAverages = {
+    'Asistente Secuencial': avg('aciertosSecuencial'),
+    'Hot': avg('aciertosHot'),
+    'Pool': avg('aciertosPool'),
+    'Herencia Inmediata': avg('aciertosInmediata'),
+    'Herencia Lote': avg('aciertosLote'),
+    'Deuda Geométrica': avg('aciertosDeuda'),
+    'Secuencial (Intersección Estricta)': avg('aciertosSecuencialEstricto'),
+  };
+  const leader = Object.entries(ruleAverages).sort((a, b) => b[1] - a[1])[0];
+
+  const posStats = Array.from({ length: 6 }, (_, pos) => {
+    const hits = rows.filter(r => r.posHits[pos]).length;
+    return { pos, hits, pct: Math.round((hits / n) * 100) };
+  });
+
+  const posStatsEstricto = Array.from({ length: 6 }, (_, pos) => {
+    const hits = rows.filter(r => r.posHitsEstricto[pos]).length;
+    return { pos, hits, pct: Math.round((hits / n) * 100) };
+  });
+
+  const totalHitsOR = rows.reduce((s, r) => s + r.aciertosSecuencial, 0);
+  const totalHitsAND = rows.reduce((s, r) => s + r.aciertosSecuencialEstricto, 0);
+  const strictShareOfHits = totalHitsOR > 0 ? Math.round((totalHitsAND / totalHitsOR) * 100) : 0;
+
+  const saludOkCount = rows.filter(r => r.saludOk).length;
+  const inmediataAvg = ruleAverages['Herencia Inmediata'];
+  const loteAvg = ruleAverages['Herencia Lote'];
+
+  return {
+    rows,
+    total: rows.length,
+    ruleAverages,
+    leader: { name: leader[0], avg: leader[1] },
+    posStats,
+    posStatsEstricto,
+    strictShareOfHits,
+    saludPct: Math.round((saludOkCount / n) * 100),
+    herenciaDominante: inmediataAvg === loteAvg ? 'Empate' : (inmediataAvg > loteAvg ? 'Inmediata' : 'Lote'),
+    herenciaAvgs: { inmediata: inmediataAvg, lote: loteAvg },
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ANÁLISIS ESTRATÉGICO & CONCLUSIONES
+// Traduce los agregados numéricos del backtest en observaciones y
+// recomendaciones accionables, en lenguaje natural.
+// ════════════════════════════════════════════════════════════════════
+function generateStrategicAnalysis(data) {
+  const bullets = [];
+  const n = data.total;
+  const pct = (avg) => Math.round((avg / 6) * 100);
+
+  // 0. Confianza de la muestra
+  if (n < 20) {
+    bullets.push(`⚠️ <strong>Muestra pequeña (${n} sorteos):</strong> las conclusiones son orientativas. Se recomienda auditar 50–100 sorteos para mayor confiabilidad estadística.`);
+  }
+
+  // 1. Algoritmo líder
+  bullets.push(`🏆 <strong>${data.leader.name}</strong> fue la función más efectiva en este periodo, con un promedio de <strong>${data.leader.avg.toFixed(2)}/6</strong> aciertos por sorteo (≈${pct(data.leader.avg)}% de la combinación ganadora).`);
+
+  // 2. Asistente Secuencial — mejores y peores posiciones
+  const seqAvg = data.ruleAverages['Asistente Secuencial'];
+  const posSorted = [...data.posStats].sort((a, b) => b.pct - a.pct);
+  const best = posSorted[0];
+  const worst = posSorted[posSorted.length - 1];
+  bullets.push(`⚡ El <strong>Asistente Secuencial</strong> acertó en promedio <strong>${seqAvg.toFixed(2)}/6</strong> posiciones (${pct(seqAvg)}%). Su punto más fuerte es <strong>P${best.pos + 1}</strong> (${best.pct}% de aciertos), mientras que <strong>P${worst.pos + 1}</strong> es la posición más difícil de predecir (${worst.pct}%) — normal, ya que las últimas posiciones cubren rangos numéricos más amplios y volátiles.`);
+
+  // 3. Pool
+  const poolAvg = data.ruleAverages['Pool'];
+  if (poolAvg >= 3) {
+    bullets.push(`🟢 El <strong>filtro Pool</strong> capturó en promedio <strong>${poolAvg.toFixed(2)}/6</strong> números ganadores — una cobertura sólida que respalda usarlo como criterio base al armar boletos.`);
+  } else {
+    bullets.push(`🟡 El <strong>filtro Pool</strong> solo capturó <strong>${poolAvg.toFixed(2)}/6</strong> números ganadores en promedio. Podría convenir ampliar su tamaño (más allá del top-15 actual) o combinarlo con otra regla para mejorar cobertura.`);
+  }
+
+  // 4. Herencia dominante
+  const { inmediata, lote } = data.herenciaAvgs;
+  if (data.herenciaDominante !== 'Empate') {
+    const winner = data.herenciaDominante === 'Inmediata' ? inmediata : lote;
+    const loser = data.herenciaDominante === 'Inmediata' ? lote : inmediata;
+    bullets.push(`🧬 La <strong>Herencia ${data.herenciaDominante}</strong> superó a la otra fuente (${winner.toFixed(2)} vs. ${loser.toFixed(2)} aciertos/sorteo). ${data.herenciaDominante === 'Inmediata' ? 'El sorteo inmediatamente anterior' : 'El sorteo del mismo lote'} es una mejor referencia para heredar números en este historial.`);
+  } else {
+    bullets.push(`🧬 <strong>Herencia Inmediata</strong> y <strong>Herencia de Lote</strong> mostraron efectividad casi idéntica (${inmediata.toFixed(2)} vs. ${lote.toFixed(2)}) — ambas fuentes aportan valor de forma equivalente.`);
+  }
+
+  // 5. Salud
+  if (data.saludPct >= 60) {
+    bullets.push(`❤️ El <strong>${data.saludPct}%</strong> de las combinaciones ganadoras cumplió el umbral de salud (≥${HEALTH_PASS_THRESHOLD}%) — el filtro de salud está bien calibrado y vale la pena exigirlo al armar boletos.`);
+  } else if (data.saludPct >= 35) {
+    bullets.push(`💛 Solo el <strong>${data.saludPct}%</strong> de los ganadores reales cumplió el umbral de salud actual — úsalo como guía, no como filtro estricto.`);
+  } else {
+    bullets.push(`❌ Apenas el <strong>${data.saludPct}%</strong> de las combinaciones ganadoras pasó el filtro de salud — muchos sorteos reales "rompen las reglas". Considera relajar los umbrales de Primos/Pool/Paridad del score de salud.`);
+  }
+
+  // 6. Intersección Estricta (AND: Pool/Hot ∩ Top-5%) vs. criterio normal (OR)
+  const strictAvg = data.ruleAverages['Secuencial (Intersección Estricta)'];
+  if (strictAvg > 0) {
+    bullets.push(`🔒 La <strong>Intersección Estricta</strong> (número resaltado en cuadrícula Y presente en el top-5% de las tarjetas a la vez) acertó en promedio <strong>${strictAvg.toFixed(2)}/6</strong> (${pct(strictAvg)}%). De todos los aciertos que logró el Asistente Secuencial en este periodo, el <strong>${data.strictShareOfHits}%</strong> tenía esta doble confirmación — es un filtro más selectivo, con menos aciertos totales pero mayor "consenso" entre ambas señales.`);
+  } else {
+    bullets.push(`🔒 En este periodo, ningún acierto del Asistente Secuencial tuvo doble confirmación (Pool/Hot <strong>y</strong> Top-5% simultáneamente) — las dos señales casi no coincidieron en el número exacto ganador.`);
+  }
+
+  // 7. Recomendación final combinando top-2 reglas
+  const top2 = Object.entries(data.ruleAverages).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+  bullets.push(`🎯 <strong>Recomendación:</strong> para maximizar aciertos, prioriza combinar <strong>${top2[0]}</strong> con <strong>${top2[1]}</strong> — fueron las reglas más consistentes de este backtest.`);
+
+  return `<ul style="padding-left:18px;margin:0;">${bullets.map(b => `<li style="margin-bottom:8px;">${b}</li>`).join('')}</ul>`;
+}
+
+function renderBacktestResults(data) {
+  document.getElementById('kpiLeader').textContent = data.leader.name;
+  document.getElementById('kpiLeaderSub').textContent = `${data.leader.avg.toFixed(2)} aciertos/sorteo (${data.total} sorteos)`;
+
+  document.getElementById('kpiSeq').textContent = data.ruleAverages['Asistente Secuencial'].toFixed(2);
+  document.getElementById('kpiPool').textContent = data.ruleAverages['Pool'].toFixed(2);
+
+  document.getElementById('kpiHerencia').textContent = data.herenciaDominante;
+  document.getElementById('kpiHerenciaSub').textContent =
+    `Inmediata ${data.herenciaAvgs.inmediata.toFixed(2)} vs. Lote ${data.herenciaAvgs.lote.toFixed(2)}`;
+
+  document.getElementById('kpiSalud').textContent = data.saludPct + '%';
+  document.getElementById('kpiSalud').style.color = data.saludPct >= 50 ? 'var(--green)' : 'var(--red)';
+
+  // Positional breakdown cards
+  const posGrid = document.getElementById('btPosGrid');
+  posGrid.innerHTML = data.posStats.map(p => {
+    const color = p.pct >= 50 ? 'var(--green)' : (p.pct >= 25 ? 'var(--gold)' : 'var(--red)');
+    return `
+      <div class="analysis-card" style="text-align:center;padding:12px 6px;">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">P${p.pos + 1}</div>
+        <div style="font-size:20px;font-weight:700;color:${color};margin:4px 0;">${p.pct}%</div>
+        <div style="font-size:9px;color:var(--text3);">${p.hits}/${data.total} sorteos</div>
+      </div>`;
+  }).join('');
+
+  // Strict Intersection (AND) — KPIs + positional grid
+  document.getElementById('kpiStrict').textContent = data.ruleAverages['Secuencial (Intersección Estricta)'].toFixed(2) + ' / 6';
+  document.getElementById('kpiStrictShare').textContent = data.strictShareOfHits + '%';
+  const posGridStrict = document.getElementById('btPosGridStrict');
+  posGridStrict.innerHTML = data.posStatsEstricto.map(p => {
+    const color = p.pct >= 50 ? 'var(--green)' : (p.pct >= 25 ? '#9F7AFF' : 'var(--red)');
+    return `
+      <div class="analysis-card" style="text-align:center;padding:12px 6px;border-color:rgba(159,122,255,0.35);">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">P${p.pos + 1} 🔒</div>
+        <div style="font-size:20px;font-weight:700;color:${color};margin:4px 0;">${p.pct}%</div>
+        <div style="font-size:9px;color:var(--text3);">${p.hits}/${data.total} sorteos</div>
+      </div>`;
+  }).join('');
+
+  // Ranking bars
+  const maxAvg = Math.max(...Object.values(data.ruleAverages), 0.01);
+  const rankOrder = Object.entries(data.ruleAverages).sort((a, b) => b[1] - a[1]);
+  const barColors = {
+    'Asistente Secuencial': 'var(--red)', 'Hot': '#FF4444', 'Pool': 'var(--green)',
+    'Herencia Inmediata': '#FFB800', 'Herencia Lote': '#4AC8FF', 'Deuda Geométrica': '#9F7AFF',
+    'Secuencial (Intersección Estricta)': '#C9A8FF'
+  };
+  document.getElementById('btRankingBars').innerHTML = rankOrder.map(([name, val]) => `
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px;">
+        <span>${name}</span><span style="font-family:'JetBrains Mono',monospace;">${val.toFixed(2)} / 6</span>
+      </div>
+      <div class="health-bar-bg">
+        <div class="health-bar-fill" style="width:${(val / maxAvg) * 100}%;background:${barColors[name] || 'var(--red)'};"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Strategic analysis & conclusions
+  document.getElementById('btStrategicAnalysis').innerHTML = generateStrategicAnalysis(data);
+
+  // Audit table
+  const tbody = document.getElementById('btAuditBody');
+  tbody.innerHTML = data.rows.map(r => {
+    const dateStr = r.date instanceof Date && !isNaN(r.date) ? r.date.toLocaleDateString('es-MX') : '—';
+    const saludBadge = r.saludOk
+      ? `<span style="color:var(--green);">✔ ${r.saludScore}%</span>`
+      : `<span style="color:var(--red);">✘ ${r.saludScore}%</span>`;
+    const detailId = `bt-detail-${r.id}`;
+    return `
+      <tr onclick="toggleBtDetail('${detailId}')" style="cursor:pointer;" title="Toca la fila para ver el detalle por posición">
+        <td>${r.id}</td>
+        <td>${dateStr}</td>
+        <td style="font-family:'JetBrains Mono',monospace;">${r.nums.join(', ')}</td>
+        <td style="text-decoration:underline dotted;">${r.aciertosSecuencial}/6 🔍</td>
+        <td style="color:#C9A8FF;">${r.aciertosSecuencialEstricto}/6 🔒</td>
+        <td>${r.aciertosHot}/6</td>
+        <td>${r.aciertosInmediata}/6</td>
+        <td>${r.aciertosLote}/6</td>
+        <td>${r.aciertosDeuda}/6</td>
+        <td>${saludBadge}</td>
+        <td><span style="font-size:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;">${r.topFunc}</span></td>
+      </tr>
+      <tr id="${detailId}" style="display:none;">
+        <td colspan="11" style="background:var(--bg4);padding:10px 14px;">
+          ${renderSeqDetailChips(r.posDetails)}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// Construye el desglose visual por posición (P1–P6) del Asistente Secuencial
+// para un sorteo, mostrando exactamente por qué cada número contó (o no)
+// como acierto: Pool/Hot por rango, Top-5 de las tarjetas con %, o ambos.
+// El candado 🔒 indica que además cumplió la Intersección Estricta (AND).
+function renderSeqDetailChips(posDetails) {
+  if (!posDetails) return '<span style="font-size:10px;color:var(--text3);">Sin detalle disponible.</span>';
+
+  const criteriaLabel = (c) => {
+    const labels = [];
+    if (c.includes('pool')) labels.push('Pool (rango)');
+    if (c.includes('hot')) labels.push('Hot (rango)');
+    if (c.includes('top5')) labels.push('Top-5 %');
+    return labels;
+  };
+
+  const cards = posDetails.map(d => {
+    const color = d.hit ? 'var(--green)' : 'var(--red)';
+    const bg = d.hit ? 'rgba(0,200,83,0.10)' : 'rgba(232,0,29,0.08)';
+    const borderStyle = d.strictHit ? `2px solid #9F7AFF` : `1.5px solid ${color}`;
+    const labels = criteriaLabel(d.criteria);
+    const reasonHtml = d.hit
+      ? labels.map(l => `<span style="display:block;font-size:8px;color:var(--text2);">${l}${l === 'Top-5 %' && d.top5Rank ? ` (#${d.top5Rank}, ${d.top5Pct}%)` : ''}</span>`).join('')
+      : `<span style="display:block;font-size:8px;color:var(--text3);">No sugerido</span>`;
+    return `
+      <div style="border:${borderStyle};background:${bg};border-radius:7px;padding:5px 8px;min-width:64px;text-align:center;position:relative;">
+        ${d.strictHit ? `<div style="position:absolute;top:-8px;right:-6px;font-size:11px;">🔒</div>` : ''}
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;">P${d.pos + 1}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:${color};">${d.num} ${d.hit ? '✔' : '✘'}</div>
+        ${reasonHtml}
+      </div>`;
+  }).join('');
+
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;">${cards}</div>`;
+}
+
+function toggleBtDetail(id) {
+  const row = document.getElementById(id);
+  if (!row) return;
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+
 // ============================================================
 // TICKETS
 // ============================================================
@@ -3257,6 +3885,14 @@ let activeLotHighlight = new Set(); // supports multi-select
 function selectDraw(h) {
   const lot = getLot(h.id);
   toggleLotFilter(lot);
+
+  // Si ya se ejecutó una auditoría, mostramos cuántos números acertó el Asistente Secuencial en este sorteo
+  if (BACKTEST_DATA) {
+    const auditRow = BACKTEST_DATA.rows.find(r => r.id === h.id);
+    if (auditRow) {
+      showNotif(`Sorteo #${h.id}: Asistente Secuencial acertó ${auditRow.aciertosSecuencial}/6 sugerencias en su turno exacto`, 'info');
+    }
+  }
 }
 
 function toggleLotFilter(lot) {
@@ -4611,6 +5247,10 @@ updateHealth = function() {
     <button class="bn-tab" id="bnt-datos" onclick="mobileTab('datos')" aria-label="Datos">
       <span class="bn-icon">⚙️</span>
       <span class="bn-label">Datos</span>
+    </button>
+    <button class="bn-tab" id="bnt-efectividad" onclick="mobileTab('efectividad')" aria-label="Efectividad">
+      <span class="bn-icon">🎯</span>
+      <span class="bn-label">Efectiv.</span>
     </button>
   </div>
 </nav>
