@@ -1236,7 +1236,7 @@ body {
   #content-efectividad .analysis-grid { grid-template-columns: repeat(2, 1fr) !important; }
   #btPosGrid { grid-template-columns: repeat(3, 1fr) !important; }
   #btPosGridStrict { grid-template-columns: repeat(3, 1fr) !important; }
-  #btAuditTable { font-size: 9px; min-width: 720px; }
+  #btAuditTable { font-size: 9px; min-width: 880px; }
 }
 
 /* ══════════════════════════════════════════════
@@ -1699,6 +1699,29 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
       <!-- NUMBER GRID -->
       <div class="number-grid" id="numberGrid"></div>
 
+      <!-- FEATURED RECOMMENDATION: INTERSECCIÓN ESTRICTA -->
+      <!-- ACTUALIZADO tras backtest con n=1,650 sorteos: Herencia Inmediata
+           (que antes ocupaba esta tarjeta) se desinfló de +0.20 a +0.02 al
+           ampliar la muestra — señal de que era ruido, no algo real. La
+           Intersección Estricta (Pool/Hot/Inmediata en la cuadrícula Y en
+           el top-5% de las tarjetas a la vez) fue la ÚNICA regla que se
+           mantuvo con ventaja positiva y consistente (+0.09 y +0.09) en
+           ambas mitades de esa muestra grande. El efecto es chico — se
+           presenta con lenguaje modesto a propósito, no como algo seguro. -->
+      <div class="analysis-card" id="featuredStrictCard" style="margin-top:14px;border:1.5px solid #9F7AFF;background:linear-gradient(135deg, rgba(159,122,255,0.08), transparent);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+          <div class="seq-title" style="margin:0;">🔒 Recomendación Destacada: Intersección Estricta</div>
+          <span style="font-size:9px;font-family:'JetBrains Mono',monospace;background:rgba(159,122,255,0.15);border:1px solid #9F7AFF;border-radius:4px;padding:2px 8px;color:#9F7AFF;font-weight:700;">✔ Ventaja modesta pero consistente</span>
+        </div>
+        <p style="font-size:11px;color:var(--text3);margin:8px 0;line-height:1.6;">
+          De las 8 reglas auditadas en 🎯 Efectividad (con 1,650 sorteos), esta fue la única con ventaja positiva y estable sobre el azar en ambas mitades del historial (+0.09 y +0.09) — pequeña, pero la más consistente que hemos medido. Son los números para <strong id="featuredStrictPosLabel">P1</strong> que aparecen resaltados en la cuadrícula <em>y</em> en el top-5% de probabilidad a la vez.
+        </p>
+        <div id="featuredStrictChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;"></div>
+        <div style="font-size:9px;color:var(--text3);">
+          El efecto es pequeño (+0.09 de 6) — trátalo como una pista adicional, no como una garantía.
+        </div>
+      </div>
+
       <!-- SEQUENTIAL ASSISTANT (below grid) -->
       <div class="seq-assist" id="seqAssist" style="margin-top:14px;">
         <div class="seq-title">⚡ Asistente Secuencial <span id="seqBacktestBadge" style="display:none;font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;margin-left:6px;color:var(--text3);"></span></div>
@@ -1895,7 +1918,7 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
       </p>
 
       <!-- Controls -->
-      <div class="analysis-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <div class="analysis-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:11px;color:var(--text2);">Sorteos a evaluar:</span>
           <select id="btLimitSelect" style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-size:12px;">
@@ -1905,6 +1928,10 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
             <option value="all">Todos</option>
           </select>
         </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer;">
+          <input type="checkbox" id="btSplitCheck" style="accent-color:var(--red);">
+          🔬 Validar consistencia (dividir en 2 mitades)
+        </label>
         <button class="btn-primary" id="btRunBtn" onclick="runBacktest()" style="font-size:12px;padding:8px 16px;">
           ▶ Ejecutar Auditoría
         </button>
@@ -1916,6 +1943,36 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
         </div>
       </div>
 
+      <!-- MEJORA #4: pesos del Score Combinado -->
+      <details class="analysis-card" style="margin-bottom:16px;padding:10px 14px;">
+        <summary style="cursor:pointer;font-size:11px;color:var(--text2);font-weight:600;">⚙️ Pesos del Score Combinado (regla "Combinado")</summary>
+        <p style="font-size:10px;color:var(--text3);margin:8px 0;line-height:1.6;">
+          Ajusta cuánto pesa cada señal al fusionarlas en un solo puntaje por número. Sube "Ejecutar Auditoría" de nuevo después de cambiar los valores. <em>Los valores por defecto ya reflejan la evidencia del backtest (Herencia Inmediata subió, Hot y Herencia Lote bajaron) — puedes seguir ajustándolos.</em>
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;">
+          <div>
+            <label style="font-size:10px;color:var(--text3);">Pool</label>
+            <input type="number" id="wPool" value="1" min="0" max="3" step="0.5" style="width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--text3);">Hot</label>
+            <input type="number" id="wHot" value="0.5" min="0" max="3" step="0.5" style="width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--text3);">H. Inmediata</label>
+            <input type="number" id="wInmediata" value="1.5" min="0" max="3" step="0.5" style="width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--text3);">H. Lote</label>
+            <input type="number" id="wLote" value="0.5" min="0" max="3" step="0.5" style="width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--text3);">Deuda</label>
+            <input type="number" id="wDeuda" value="1" min="0" max="3" step="0.5" style="width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-size:12px;">
+          </div>
+        </div>
+      </details>
+
       <div id="btEmptyState" style="text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;">
         Pulsa <strong>Ejecutar Auditoría</strong> para calcular la efectividad histórica de cada regla y del Asistente Secuencial.
       </div>
@@ -1925,7 +1982,7 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
         <!-- KPI CARDS -->
         <div class="analysis-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
           <div class="analysis-card">
-            <div class="analysis-card-title">🏆 Algoritmo Líder</div>
+            <div class="analysis-card-title">🏆 Algoritmo Líder <span style="font-size:8px;color:var(--text3);font-weight:400;">(vs. azar)</span></div>
             <div id="kpiLeader" style="font-size:16px;font-weight:700;color:var(--gold);margin-top:6px;">—</div>
             <div id="kpiLeaderSub" style="font-size:10px;color:var(--text3);margin-top:2px;">—</div>
           </div>
@@ -1948,6 +2005,49 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
             <div class="analysis-card-title">❤️ Tasa de Salud</div>
             <div id="kpiSalud" style="font-size:16px;font-weight:700;color:var(--text);margin-top:6px;">—</div>
             <div id="kpiSaludSub" style="font-size:10px;color:var(--text3);margin-top:2px;">sorteos ganadores saludables</div>
+          </div>
+        </div>
+
+        <!-- MEJORA #1: LÍNEA BASE ALEATORIA -->
+        <div class="section-title" style="margin-bottom:6px;">📐 Reglas vs. Azar <span style="font-size:10px;color:var(--text3);font-weight:400;">(¿le ganan de verdad a una selección aleatoria del mismo tamaño?)</span></div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+          "Azar" es el promedio esperado si los candidatos de cada regla se hubieran elegido al puro azar (cálculo hipergeométrico exacto). Si la "Ventaja" es ≤0, esa regla no le está ganando a tirar los dados.
+        </p>
+        <div style="overflow-x:auto;margin-bottom:20px;">
+          <table class="history-table" id="btBaselineTable">
+            <thead><tr><th>Regla</th><th>Real</th><th>Azar</th><th>Ventaja</th></tr></thead>
+            <tbody id="btBaselineBody"></tbody>
+          </table>
+        </div>
+
+        <!-- ANÁLISIS DE HERENCIA COMPLETO: 6 NÚMEROS + ADICIONAL -->
+        <div class="section-title" style="margin-bottom:6px;">🧬 Herencia Inmediata: Detalle (6 números + Adicional)</div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+          Cada sorteo en realidad revela <strong>7 bolas</strong> (6 principales + 1 Adicional), no solo 6. Aquí se desglosa cuántos números son heredados por repetición exacta ("naturales") vs. por vecindad (±1, "vecinos"), y si el Adicional también resultó heredado.
+        </p>
+        <div class="analysis-card" style="margin-bottom:20px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
+            <div>
+              <div class="analysis-card-title">Naturales (repetición exacta)</div>
+              <div id="kpiHerenciaNatural" style="font-size:16px;font-weight:700;color:#FFB800;margin-top:6px;">—</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px;">de 6 números</div>
+            </div>
+            <div>
+              <div class="analysis-card-title">Vecinos (±1)</div>
+              <div id="kpiHerenciaPartner" style="font-size:16px;font-weight:700;color:#FFB800;margin-top:6px;">—</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px;">de 6 números</div>
+            </div>
+            <div>
+              <div class="analysis-card-title">Adicional también heredado</div>
+              <div id="kpiHerenciaAdicional" style="font-size:16px;font-weight:700;color:#FFB800;margin-top:6px;">—</div>
+              <div id="kpiHerenciaAdicionalSub" style="font-size:9px;color:var(--text3);margin-top:2px;">—</div>
+              <div id="kpiHerenciaAdicionalSplit" style="font-size:9px;color:var(--text3);margin-top:4px;line-height:1.5;">—</div>
+            </div>
+            <div>
+              <div class="analysis-card-title">Total heredado (sobre 7)</div>
+              <div id="kpiHerenciaTotal7" style="font-size:16px;font-weight:700;color:#FFB800;margin-top:6px;">—</div>
+              <div id="kpiHerenciaTotal7Sub" style="font-size:9px;color:var(--text3);margin-top:2px;">—</div>
+            </div>
           </div>
         </div>
 
@@ -1978,6 +2078,53 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
           <div id="btRankingBars"></div>
         </div>
 
+        <!-- MEJORA #3: CONSISTENCIA TRAIN/TEST -->
+        <div id="btSplitSection" style="display:none;">
+          <div class="section-title" style="margin-bottom:6px;">🔬 Consistencia Train/Test <span style="font-size:10px;color:var(--text3);font-weight:400;">(¿el resultado se mantiene en ambas mitades del historial?)</span></div>
+          <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+            Se dividió el rango evaluado en 2 mitades cronológicas independientes. Si una regla es buena "de verdad" (y no solo tuvo suerte en algunos sorteos), su efectividad debería verse parecida en ambas mitades.
+          </p>
+          <div id="btSplitVerdict" style="font-size:12px;font-weight:600;margin-bottom:10px;"></div>
+          <div style="overflow-x:auto;margin-bottom:20px;">
+            <table class="history-table" id="btSplitTable">
+              <thead>
+                <tr>
+                  <th rowspan="2">Regla</th>
+                  <th colspan="3" id="btSplitHeadReciente" style="text-align:center;">Mitad Reciente</th>
+                  <th colspan="3" id="btSplitHeadAntigua" style="text-align:center;">Mitad Antigua</th>
+                </tr>
+                <tr>
+                  <th>Real</th><th>Azar</th><th>Ventaja</th>
+                  <th>Real</th><th>Azar</th><th>Ventaja</th>
+                </tr>
+              </thead>
+              <tbody id="btSplitBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- MEJORA #5: BOLETO AUTOGENERADO & CATEGORÍAS DE PREMIO -->
+        <div class="section-title" style="margin-bottom:6px;">🎟️ Boleto Autogenerado &amp; Categorías de Premio</div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+          Simula seguir siempre la sugerencia #1 del Asistente en cada posición (sin conocer el resultado real) y clasifica el boleto resultante según las categorías de premio de Melate Retro (fuente: Lotería Nacional / Pronósticos — verifica el reglamento oficial para montos exactos).
+        </p>
+        <div class="analysis-card" style="margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+          <div>
+            <div class="analysis-card-title">Aciertos promedio del boleto</div>
+            <div id="kpiTicketAvg" style="font-size:16px;font-weight:700;color:var(--gold);margin-top:6px;">—</div>
+          </div>
+          <div>
+            <div class="analysis-card-title">% de sorteos con algún premio</div>
+            <div id="kpiTicketPrizePct" style="font-size:16px;font-weight:700;color:var(--gold);margin-top:6px;">—</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;margin-bottom:20px;">
+          <table class="history-table" id="btCategoryTable">
+            <thead><tr><th>Categoría</th><th>Veces</th><th>%</th></tr></thead>
+            <tbody id="btCategoryBody"></tbody>
+          </table>
+        </div>
+
         <!-- STRATEGIC ANALYSIS & CONCLUSIONS -->
         <div class="section-title" style="margin-bottom:12px;">💡 Análisis Estratégico &amp; Conclusiones</div>
         <div class="analysis-card" style="margin-bottom:20px;border-left:3px solid var(--gold);">
@@ -1999,7 +2146,9 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
                 <th>H. Inmediata</th>
                 <th>H. Lote</th>
                 <th>Deuda</th>
+                <th>Combinado</th>
                 <th>Salud</th>
+                <th>Categoría 🎟️</th>
                 <th>Función Top</th>
               </tr>
             </thead>
@@ -2472,6 +2621,7 @@ function renderGrid() {
 
   renderSelDisplay();
   updateSeqAssistant();
+  renderFeaturedStrict();
 }
 
 function toggleNum(n) {
@@ -2596,28 +2746,43 @@ function updateHealth() {
 // SEQUENTIAL ASSISTANT
 // ============================================================
 
+// ── REDISEÑO v2 (evidencia de backtest): TAMAÑO FIJO en vez de variable ──
+// El problema detectado: la lógica anterior ("agrega Inmediata, si faltan
+// agrega Pool, si aún faltan agrega Hot") podía devolver conjuntos de
+// tamaño muy variable (a veces 4, a veces casi todo el rango). Eso infla
+// tanto el valor Real como el Azar esperado de forma desigual entre
+// sorteos, contaminando la comparación "Regla vs. Azar". La solución:
+// puntuar cada candidato (Inmediata > Pool > Hot, según su ventaja
+// probada) y quedarnos SIEMPRE con el mismo número de candidatos (top-8),
+// igual que ya hace el Score Combinado con su top-15 fijo. Esta función es
+// compartida por la cuadrícula en vivo (getSeqSuggestions) y por el motor
+// de backtest (seqSuggestedSetForPos), para que ambos midan exactamente lo mismo.
+const GRID_SCORE_WEIGHTS = { inmediata: 3, pool: 2, hot: 1 };
+const GRID_CANDIDATE_CAP = 8;
+
+function computeGridTopCandidates(pos, excludeNums, capSize = GRID_CANDIDATE_CAP) {
+  const range = POS_RANGES[pos];
+  const scored = [];
+  for (let n = range.min; n <= range.max; n++) {
+    if (excludeNums.includes(n)) continue;
+    const isInmediata = IMMEDIATE_NATURALS.has(n) || IMMEDIATE_PARTNERS.has(n);
+    const isPool = POOL.has(n);
+    const isHot = HOT.has(n);
+    const score = (isInmediata ? GRID_SCORE_WEIGHTS.inmediata : 0) +
+                  (isPool ? GRID_SCORE_WEIGHTS.pool : 0) +
+                  (isHot ? GRID_SCORE_WEIGHTS.hot : 0);
+    if (score > 0) scored.push({ num: n, score, isInmediata, isPool, isHot });
+  }
+  scored.sort((a, b) => b.score - a.score || a.num - b.num);
+  return scored.slice(0, capSize);
+}
+
 function getSeqSuggestions() {
   const suggestions = new Set();
   if(currentSelection.length >= 6) return suggestions;
 
   const pos = currentSelection.length; // next position (0-indexed)
-  const range = POS_RANGES[pos];
-  const lastNum = currentSelection[currentSelection.length - 1];
-
-  // Suggest numbers in expected range for next position
-  for(let n = range.min; n <= range.max; n++) {
-    if(!currentSelection.includes(n)) {
-      // Prefer pool + position range
-      if(POOL.has(n)) suggestions.add(n);
-    }
-  }
-
-  // If too few suggestions, add hot numbers in range
-  if(suggestions.size < 4) {
-    for(let n = range.min; n <= range.max; n++) {
-      if(!currentSelection.includes(n) && HOT.has(n)) suggestions.add(n);
-    }
-  }
+  computeGridTopCandidates(pos, currentSelection).forEach(c => suggestions.add(c.num));
 
   return suggestions;
 }
@@ -2721,14 +2886,63 @@ function updateSeqAssistant() {
     <div style="display:flex;gap:6px;margin-top:3px;font-size:9px;color:var(--text3);align-items:center;">
       <span style="color:var(--gold);font-weight:700;">█ Top prob.</span>&nbsp;
       <span style="color:var(--green);font-weight:700;">█ Candidatos</span>&nbsp;·&nbsp;
-      <span style="color:#4AC8FF;">L=Lote</span>&nbsp;
-      <span style="color:#FFB800;">I=Inmediato</span>&nbsp;
-      <span style="color:var(--text3);">G=Global</span>
+      <span style="color:#FFB800;font-weight:700;">I=Inmediato</span>&nbsp;
+      <span style="color:var(--text3);">G=Global</span>&nbsp;
+      <span style="color:#4AC8FF;">L=Lote</span>
     </div>
     <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">${suggHtml}</div>`;
 
   rangeAlert.style.display = 'flex';
   rangeAlert.innerHTML = `⚠ Rango P${pos+1}: ${range.min}–${range.max} &nbsp;·&nbsp; ±1σ esperado alrededor de ${normStat ? normStat.mu : '—'}`;
+}
+
+// ── RECOMENDACIÓN DESTACADA: HERENCIA INMEDIATA ────────────────────────
+// Evidencia de backtest (validado Train/Test por mitades del historial):
+// de las 8 reglas auditadas, esta es la ÚNICA con ventaja positiva sobre
+// el azar en AMBAS mitades. Le damos su propia tarjeta prominente, en vez
+// de dejarla enterrada dentro de la lógica del Asistente Secuencial.
+function renderFeaturedStrict() {
+  const posLabelEl = document.getElementById('featuredStrictPosLabel');
+  const chipsEl = document.getElementById('featuredStrictChips');
+  if (!posLabelEl || !chipsEl) return; // tarjeta no presente en esta vista
+
+  if (HISTORY.length === 0) {
+    posLabelEl.textContent = '—';
+    chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3);">Carga historial para activar esta recomendación.</span>';
+    return;
+  }
+
+  if (currentSelection.length >= 6) {
+    posLabelEl.textContent = '—';
+    chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3);">Boleto completo — no hay más posiciones que sugerir.</span>';
+    return;
+  }
+
+  const pos = currentSelection.length;
+  posLabelEl.textContent = `P${pos + 1}`;
+
+  // La Intersección Estricta requiere AMBAS señales a la vez: el número debe
+  // aparecer entre los candidatos con puntaje de cuadrícula (Inmediata/Pool/Hot)
+  // Y en el top-5 de probabilidad de las tarjetas (triple fuente).
+  const gridCandidates = computeGridTopCandidates(pos, currentSelection);
+  const itSugg = getInverseTransformSuggestions(pos, currentSelection);
+  const top5 = itSugg.slice(0, 5);
+  const top5Lookup = new Map(top5.map(s => [s.num, s.pct]));
+
+  const strictCandidates = gridCandidates
+    .filter(c => top5Lookup.has(c.num))
+    .map(c => ({ ...c, pct: top5Lookup.get(c.num) }));
+
+  if (strictCandidates.length === 0) {
+    chipsEl.innerHTML = '<span style="font-size:11px;color:var(--text3);">Sin coincidencias dobles para esta posición todavía — revisa el Asistente Secuencial de abajo para más opciones.</span>';
+    return;
+  }
+
+  chipsEl.innerHTML = strictCandidates.map(c => {
+    const selected = currentSelection.includes(c.num);
+    const border = selected ? '2px solid #fff' : '1px solid transparent';
+    return `<span onclick="toggleNum(${c.num})" style="cursor:pointer;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;padding:4px 6px;border-radius:8px;background:#9F7AFF;color:#fff;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;border:${border};${selected ? 'box-shadow:0 0 0 2px #9F7AFF;' : ''}">${c.num}${selected ? ' ✓' : ''}<span style="font-size:8px;font-weight:400;opacity:0.85;">${c.pct}%</span></span>`;
+  }).join('');
 }
 
 // ============================================================
@@ -2798,7 +3012,13 @@ function randomize() {
 // ════════════════════════════════════════════════════════════════════
 
 // Pesos de fusión (deben sumar 1.0)
-const CDF_WEIGHTS = { lote: 0.55, immediate: 0.30, global: 0.15 };
+// REDISEÑO (evidencia de backtest, validado con Train/Test por mitades):
+// "Inmediato" fue la ÚNICA fuente con ventaja real y consistente sobre el
+// azar en ambas mitades del historial (+0.33 reciente, +0.07 antigua).
+// "Lote" resultó inconsistente/negativo entre mitades (+0.08 / -0.17) —
+// firma clásica de ruido, no de señal real. Por eso "Inmediato" ahora
+// domina la fusión y "Lote" se redujo a un peso menor.
+const CDF_WEIGHTS = { lote: 0.15, immediate: 0.60, global: 0.25 };
 
 // Build a raw frequency map for a given draws array and position
 function buildFreqMap(draws, pos) {
@@ -3164,25 +3384,18 @@ function seqSuggestedSetForPos(pos, selectionSoFar) {
     return meta.get(n);
   };
 
-  // 1) Lógica de cuadrícula (POOL dentro del rango de la posición)
-  const range = POS_RANGES[pos];
-  let poolTagged = 0;
-  for (let n = range.min; n <= range.max; n++) {
-    if (!selectionSoFar.includes(n) && POOL.has(n)) {
-      getEntry(n).criteria.add('pool');
-      poolTagged++;
-    }
-  }
-  // Si hay pocos candidatos de Pool en el rango, se complementa con Hot
-  if (poolTagged < 4) {
-    for (let n = range.min; n <= range.max; n++) {
-      if (!selectionSoFar.includes(n) && HOT.has(n)) {
-        getEntry(n).criteria.add('hot');
-      }
-    }
-  }
+  // 1) Lógica de cuadrícula REDISEÑADA v2 — TAMAÑO FIJO (top-8 por score,
+  // igual que la cuadrícula en vivo vía computeGridTopCandidates). Ya no es
+  // una cadena "agrega si faltan" de tamaño variable, para no inflar la
+  // comparación contra el azar con una red más grande.
+  computeGridTopCandidates(pos, selectionSoFar).forEach(c => {
+    const e = getEntry(c.num);
+    if (c.isInmediata) e.criteria.add('inmediata');
+    if (c.isPool) e.criteria.add('pool');
+    if (c.isHot) e.criteria.add('hot');
+  });
 
-  // 2) Top-5 del Asistente Secuencial (triple fuente: Lote/Inmediato/Global)
+  // 2) Top-5 del Asistente Secuencial (triple fuente, ahora repesada hacia Inmediato — ver CDF_WEIGHTS)
   const itSugg = getInverseTransformSuggestions(pos, selectionSoFar);
   const top5 = itSugg.slice(0, 5);
   top5.forEach((s, idx) => {
@@ -3207,6 +3420,110 @@ function topDebtNumbers(n = 10) {
   );
 }
 
+// ── MEJORA #2: Intervalo de confianza (Wilson score) ──────────────────
+// Con muestras pequeñas (25-100 sorteos), un 55% vs. 48% puede ser puro
+// ruido. Wilson da un rango realista en vez de solo el punto estimado.
+function wilsonInterval(hits, n, z = 1.96) {
+  if (n === 0) return { pct: 0, low: 0, high: 0, margin: 0 };
+  const phat = hits / n;
+  const denom = 1 + (z * z) / n;
+  const center = (phat + (z * z) / (2 * n)) / denom;
+  const margin = (z * Math.sqrt((phat * (1 - phat)) / n + (z * z) / (4 * n * n))) / denom;
+  return {
+    pct: Math.round(phat * 100),
+    low: Math.max(0, Math.round((center - margin) * 100)),
+    high: Math.min(100, Math.round((center + margin) * 100)),
+    margin: Math.round(margin * 100),
+  };
+}
+
+// ── MEJORA #4: Score Combinado (ponderado, ajustable por el usuario) ──
+// Fusiona Pool/Hot/Herencia Inmediata/Herencia Lote/Deuda en un solo
+// puntaje por número (1-39) y toma el top-15 (mismo tamaño que Pool,
+// para que la comparación contra el azar sea justa).
+function computeCombinedScoreSet(weights, immediateSet, loteSet) {
+  const gd = ensureGeoDebt();
+  const debtVals = Object.values(gd).map(x => x.score);
+  const minDebt = Math.min(...debtVals), maxDebt = Math.max(...debtVals);
+  const debtRange = (maxDebt - minDebt) || 1;
+
+  const scored = [];
+  for (let n = 1; n <= 39; n++) {
+    const sPool = POOL.has(n) ? 1 : 0;
+    const sHot = HOT.has(n) ? 1 : 0;
+    const sInmediata = immediateSet.has(n) ? 1 : 0;
+    const sLote = loteSet.has(n) ? 1 : 0;
+    const sDeuda = gd[n] ? (gd[n].score - minDebt) / debtRange : 0;
+    const score = weights.pool * sPool + weights.hot * sHot + weights.inmediata * sInmediata +
+                  weights.lote * sLote + weights.deuda * sDeuda;
+    scored.push({ num: n, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return new Set(scored.slice(0, 15).map(x => x.num));
+}
+
+// ── MEJORA #5: Boleto autogenerado + Categoría de premio ──────────────
+// A diferencia de la simulación "OR/AND" (que usa el número ganador real
+// como ancla en cada paso), esto genera un boleto de 6 números de forma
+// 100% autónoma: en cada posición toma el candidato #1 del asistente,
+// sin conocer el resultado real. Así se puede evaluar qué habría pasado
+// si el usuario simplemente hubiera seguido siempre la sugerencia top-1.
+function generateAutonomousTicket() {
+  const selection = [];
+  for (let pos = 0; pos < 6; pos++) {
+    const range = POS_RANGES[pos];
+    const itSugg = getInverseTransformSuggestions(pos, selection);
+    let candidate = null;
+    if (itSugg.length > 0) {
+      candidate = itSugg[0].num;
+    } else {
+      for (let n = range.min; n <= range.max; n++) {
+        if (!selection.includes(n) && POOL.has(n)) { candidate = n; break; }
+      }
+      if (candidate === null) {
+        for (let n = range.min; n <= range.max; n++) {
+          if (!selection.includes(n) && HOT.has(n)) { candidate = n; break; }
+        }
+      }
+      if (candidate === null) {
+        let mid = Math.round((range.min + range.max) / 2);
+        while (selection.includes(mid) && mid <= range.max) mid++;
+        candidate = Math.min(mid, range.max);
+      }
+    }
+    selection.push(candidate);
+  }
+  return selection.slice().sort((a, b) => a - b);
+}
+
+// Categorías de premio de Melate Retro según fuentes públicas (Lotería
+// Nacional / Pronósticos). Verifica el reglamento oficial para montos y
+// reglas exactas — esto es solo para clasificar el boleto simulado.
+const PRIZE_TIERS = [
+  { tier: 1, label: '1er lugar (6 aciertos)' },
+  { tier: 2, label: '2do lugar (5 + adicional)' },
+  { tier: 3, label: '3er lugar (5 aciertos)' },
+  { tier: 4, label: '4to lugar (4 aciertos)' },
+  { tier: 5, label: '5to lugar (3 aciertos)' },
+  { tier: 6, label: '6to lugar (2 + adicional)' },
+  { tier: 7, label: '7mo lugar (1 + adicional)' },
+];
+
+function classifyPrizeCategory(ticket, winningNums, adicional) {
+  const matches = ticket.filter(n => winningNums.includes(n)).length;
+  const extras = ticket.filter(n => !winningNums.includes(n));
+  const adicionalMatch = adicional !== null && adicional !== undefined && extras.includes(adicional);
+
+  if (matches === 6) return { tier: 1, label: PRIZE_TIERS[0].label, matches };
+  if (matches === 5 && adicionalMatch) return { tier: 2, label: PRIZE_TIERS[1].label, matches };
+  if (matches === 5) return { tier: 3, label: PRIZE_TIERS[2].label, matches };
+  if (matches === 4) return { tier: 4, label: PRIZE_TIERS[3].label, matches };
+  if (matches === 3) return { tier: 5, label: PRIZE_TIERS[4].label, matches };
+  if (matches === 2 && adicionalMatch) return { tier: 6, label: PRIZE_TIERS[5].label, matches };
+  if (matches === 1 && adicionalMatch) return { tier: 7, label: PRIZE_TIERS[6].label, matches };
+  return { tier: 0, label: 'Sin premio', matches };
+}
+
 let BACKTEST_DATA = null; // cache del último resultado
 
 async function runBacktest() {
@@ -3217,6 +3534,24 @@ async function runBacktest() {
   const progressLabel = document.getElementById('btProgressLabel');
   const emptyState = document.getElementById('btEmptyState');
   const resultsBox = document.getElementById('btResults');
+
+  // MEJORA #4: pesos del Score Combinado (ajustables por el usuario en la UI)
+  const readWeight = (id, def) => {
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(el.value) : NaN;
+    return isNaN(v) ? def : v;
+  };
+  const combinedWeights = {
+    pool: readWeight('wPool', 1),
+    hot: readWeight('wHot', 1),
+    inmediata: readWeight('wInmediata', 1),
+    lote: readWeight('wLote', 1),
+    deuda: readWeight('wDeuda', 1),
+  };
+
+  // MEJORA #3: validación de consistencia dividiendo el historial en 2 mitades
+  const splitCheck = document.getElementById('btSplitCheck');
+  const doSplit = splitCheck ? splitCheck.checked : false;
 
   if (HISTORY.length < 5) {
     showNotif('Se necesitan al menos 5 sorteos en el historial para auditar.', 'warning');
@@ -3265,12 +3600,47 @@ async function runBacktest() {
         // --- Reglas simples: intersección directa con el sorteo real ---
         const aciertosHot = nums.filter(n => HOT.has(n)).length;
         const aciertosPool = nums.filter(n => POOL.has(n)).length;
-        const aciertosInmediata = nums.filter(n => IMMEDIATE_NATURALS.has(n) || IMMEDIATE_PARTNERS.has(n)).length;
-        const aciertosLote = nums.filter(n => LOTE_NATURALS.has(n) || LOTE_PARTNERS.has(n)).length;
+        const immediateSet = new Set([...IMMEDIATE_NATURALS, ...IMMEDIATE_PARTNERS]);
+        const loteSet = new Set([...LOTE_NATURALS, ...LOTE_PARTNERS]);
+        const aciertosInmediata = nums.filter(n => immediateSet.has(n)).length;
+        const aciertosLote = nums.filter(n => loteSet.has(n)).length;
+
+        // ANÁLISIS DE HERENCIA COMPLETO (6 números + Adicional): el sorteo
+        // en realidad revela 7 bolas (6 principales + 1 adicional), no solo
+        // 6. Desglosamos cuántos de los aciertos de Herencia Inmediata son
+        // repetición exacta ("naturales") vs. vecino ±1 ("vecinos"), y si el
+        // número Adicional también resultó heredado del sorteo anterior.
+        const immediateNaturalCount = nums.filter(n => IMMEDIATE_NATURALS.has(n)).length;
+        const immediatePartnerCount = nums.filter(n => IMMEDIATE_PARTNERS.has(n)).length;
+        const hasAdicional = draw.adicional !== null && draw.adicional !== undefined;
+        const adicionalInherited = hasAdicional && immediateSet.has(draw.adicional);
+        const adicionalIsNatural = hasAdicional && IMMEDIATE_NATURALS.has(draw.adicional);
+        const adicionalIsPartner = hasAdicional && IMMEDIATE_PARTNERS.has(draw.adicional);
+        const totalInheritedWith7 = aciertosInmediata + (adicionalInherited ? 1 : 0);
+        // Tamaños de los conjuntos "natural" (siempre 6) y "vecino" (variable,
+        // según bordes 1/39) de ESTE sorteo — para la línea base del Adicional solo.
+        const immediateNaturalSetSize = IMMEDIATE_NATURALS.size;
+        const immediatePartnerSetSize = IMMEDIATE_PARTNERS.size;
+
         const debtSet = topDebtNumbers(10);
         const aciertosDeuda = nums.filter(n => debtSet.has(n)).length;
         const saludScore = computeComboHealth(nums);
         const saludOk = saludScore >= HEALTH_PASS_THRESHOLD;
+
+        // MEJORA #1: Línea Base Aleatoria — valor esperado por puro azar
+        // (hipergeométrico: 6 * |conjunto candidato| / 39) para cada regla
+        // de "todo el tablero". Permite saber si la regla realmente le
+        // gana al azar, o si su "efectividad" es indistinguible de éste.
+        const baselinePool = 6 * POOL.size / 39;
+        const baselineHot = 6 * HOT.size / 39;
+        const baselineInmediata = 6 * immediateSet.size / 39;
+        const baselineLote = 6 * loteSet.size / 39;
+        const baselineDeuda = 6 * debtSet.size / 39;
+
+        // MEJORA #4: Score Combinado (ponderado, pesos ajustables en la UI)
+        const combinedSet = computeCombinedScoreSet(combinedWeights, immediateSet, loteSet);
+        const aciertosCombinado = nums.filter(n => combinedSet.has(n)).length;
+        const baselineCombinado = 6 * 15 / 39; // siempre top-15, igual que Pool
 
         // --- Asistente Secuencial: simulación posición por posición ---
         // "hit" (OR) = ya lo teníamos: Pool/Hot por rango  ó  Top-5% de las tarjetas.
@@ -3281,6 +3651,8 @@ async function runBacktest() {
         const posDetails = [];
         let aciertosSecuencial = 0;
         let aciertosSecuencialEstricto = 0;
+        let baselineSecuencial = 0;      // MEJORA #1 (acumulado posición por posición)
+        let baselineSecuencialEstricto = 0;
         for (let pos = 0; pos < 6; pos++) {
           const selectionSoFar = nums.slice(0, pos);
           const { set: suggested, meta } = seqSuggestedSetForPos(pos, selectionSoFar);
@@ -3292,7 +3664,7 @@ async function runBacktest() {
           }
           const entry = meta.get(num);
           const criteriaArr = entry ? [...entry.criteria] : [];
-          const strictHit = criteriaArr.includes('top5') && (criteriaArr.includes('pool') || criteriaArr.includes('hot'));
+          const strictHit = criteriaArr.includes('top5') && (criteriaArr.includes('inmediata') || criteriaArr.includes('pool') || criteriaArr.includes('hot'));
           if (strictHit) {
             posHitsEstricto[pos] = true;
             aciertosSecuencialEstricto++;
@@ -3303,7 +3675,21 @@ async function runBacktest() {
             top5Rank: entry ? entry.top5Rank : null,
             top5Pct: entry ? entry.top5Pct : null,
           });
+
+          // Línea base: probabilidad de acertar por azar = candidatos / ancho del rango de esa posición
+          const posRange = POS_RANGES[pos];
+          const width = posRange.max - posRange.min + 1;
+          baselineSecuencial += suggested.size / width;
+          const strictCandCount = [...meta.values()].filter(v =>
+            v.criteria.has('top5') && (v.criteria.has('inmediata') || v.criteria.has('pool') || v.criteria.has('hot'))
+          ).length;
+          baselineSecuencialEstricto += strictCandCount / width;
         }
+
+        // MEJORA #5: boleto autogenerado (top-1 en cada posición, sin conocer el resultado)
+        // y su categoría de premio real si se hubiera jugado tal cual.
+        const autoTicket = generateAutonomousTicket();
+        const prizeInfo = classifyPrizeCategory(autoTicket, nums, draw.adicional ?? null);
 
         // Función más efectiva de este sorteo (se mantiene igual que antes, sin el criterio estricto)
         const ruleScores = {
@@ -3312,6 +3698,7 @@ async function runBacktest() {
           'H. Inmediata': aciertosInmediata,
           'H. Lote': aciertosLote,
           'Deuda': aciertosDeuda,
+          'Combinado': aciertosCombinado,
         };
         const topFunc = Object.entries(ruleScores).sort((a, b) => b[1] - a[1])[0][0];
 
@@ -3322,7 +3709,13 @@ async function runBacktest() {
           aciertosSecuencial, posHits, posDetails,
           aciertosSecuencialEstricto, posHitsEstricto,
           aciertosHot, aciertosPool, aciertosInmediata, aciertosLote, aciertosDeuda,
+          aciertosCombinado,
+          immediateNaturalCount, immediatePartnerCount, hasAdicional, adicionalInherited, adicionalIsNatural, adicionalIsPartner, totalInheritedWith7,
+          immediateNaturalSetSize, immediatePartnerSetSize,
+          baselinePool, baselineHot, baselineInmediata, baselineLote, baselineDeuda,
+          baselineSecuencial, baselineSecuencialEstricto, baselineCombinado,
           saludScore, saludOk,
+          autoTicket, prizeInfo,
           topFunc
         });
       }
@@ -3354,6 +3747,21 @@ async function runBacktest() {
   renderGrid(); renderAnalysis(); renderHistory();
 
   BACKTEST_DATA = aggregateBacktest(rows);
+  BACKTEST_DATA.combinedWeights = combinedWeights;
+
+  // MEJORA #3: dividir cronológicamente en 2 mitades y comparar consistencia
+  if (doSplit && rows.length >= 10) {
+    const mid = Math.ceil(rows.length / 2);
+    const rowsRecientes = rows.slice(0, mid);   // mitad más reciente dentro del rango evaluado
+    const rowsAntiguas = rows.slice(mid);       // mitad más antigua
+    BACKTEST_DATA.splitData = {
+      reciente: aggregateBacktest(rowsRecientes),
+      antigua: aggregateBacktest(rowsAntiguas),
+    };
+  } else {
+    BACKTEST_DATA.splitData = null;
+  }
+
   renderBacktestResults(BACKTEST_DATA);
 
   runBtn.disabled = false;
@@ -3375,17 +3783,52 @@ function aggregateBacktest(rows) {
     'Herencia Lote': avg('aciertosLote'),
     'Deuda Geométrica': avg('aciertosDeuda'),
     'Secuencial (Intersección Estricta)': avg('aciertosSecuencialEstricto'),
+    'Combinado (Score Ponderado)': avg('aciertosCombinado'),
   };
-  const leader = Object.entries(ruleAverages).sort((a, b) => b[1] - a[1])[0];
 
+  // MEJORA #1: Línea Base Aleatoria — cuánto acertaría cada regla si los
+  // números se hubieran elegido al puro azar, dado el mismo tamaño de
+  // conjunto candidato. La "ventaja" (edge) = regla - azar.
+  const baselineAverages = {
+    'Asistente Secuencial': avg('baselineSecuencial'),
+    'Hot': avg('baselineHot'),
+    'Pool': avg('baselinePool'),
+    'Herencia Inmediata': avg('baselineInmediata'),
+    'Herencia Lote': avg('baselineLote'),
+    'Deuda Geométrica': avg('baselineDeuda'),
+    'Secuencial (Intersección Estricta)': avg('baselineSecuencialEstricto'),
+    'Combinado (Score Ponderado)': avg('baselineCombinado'),
+  };
+  const edges = {};
+  Object.keys(ruleAverages).forEach(k => { edges[k] = ruleAverages[k] - baselineAverages[k]; });
+
+  // El "líder" ahora se decide por VENTAJA sobre el azar (edge), no por el
+  // valor real crudo — una regla con valor alto pero que no le gana al
+  // azar no debería aparecer como "ganadora". Umbral: +0.15 para
+  // considerarse una ventaja clara; si nadie lo supera, se marca así.
+  const EDGE_CLEAR_THRESHOLD = 0.15;
+  const leaderByRealEntries = Object.entries(ruleAverages).sort((a, b) => b[1] - a[1]);
+  const leaderByEdgeEntries = Object.entries(ruleAverages).sort((a, b) => edges[b[0]] - edges[a[0]]);
+  const topByEdgeName = leaderByEdgeEntries[0][0];
+  const leader = {
+    name: topByEdgeName,
+    avg: ruleAverages[topByEdgeName],
+    edge: edges[topByEdgeName],
+    hasClearEdge: edges[topByEdgeName] > EDGE_CLEAR_THRESHOLD,
+  };
+  const leaderByReal = { name: leaderByRealEntries[0][0], avg: leaderByRealEntries[0][1] };
+
+  // MEJORA #2: intervalos de confianza (Wilson) sobre el % por posición
   const posStats = Array.from({ length: 6 }, (_, pos) => {
     const hits = rows.filter(r => r.posHits[pos]).length;
-    return { pos, hits, pct: Math.round((hits / n) * 100) };
+    const ci = wilsonInterval(hits, n);
+    return { pos, hits, pct: ci.pct, ciLow: ci.low, ciHigh: ci.high, ciMargin: ci.margin };
   });
 
   const posStatsEstricto = Array.from({ length: 6 }, (_, pos) => {
     const hits = rows.filter(r => r.posHitsEstricto[pos]).length;
-    return { pos, hits, pct: Math.round((hits / n) * 100) };
+    const ci = wilsonInterval(hits, n);
+    return { pos, hits, pct: ci.pct, ciLow: ci.low, ciHigh: ci.high, ciMargin: ci.margin };
   });
 
   const totalHitsOR = rows.reduce((s, r) => s + r.aciertosSecuencial, 0);
@@ -3396,17 +3839,82 @@ function aggregateBacktest(rows) {
   const inmediataAvg = ruleAverages['Herencia Inmediata'];
   const loteAvg = ruleAverages['Herencia Lote'];
 
+  // Análisis de Herencia completo (6 números + Adicional): desglose de
+  // naturales (repetición exacta) vs. vecinos (±1), y si el número
+  // Adicional (7ma bola) también resultó heredado del sorteo anterior.
+  const avgInmediataNatural = avg('immediateNaturalCount');
+  const avgInmediataPartner = avg('immediatePartnerCount');
+  const drawsWithAdicional = rows.filter(r => r.hasAdicional);
+  const nAdicional = drawsWithAdicional.length;
+  const adicionalInheritedPct = nAdicional > 0
+    ? Math.round((drawsWithAdicional.filter(r => r.adicionalInherited).length / nAdicional) * 100)
+    : null;
+  const adicionalBaselinePct = Math.round((baselineAverages['Herencia Inmediata'] / 6) * 100);
+
+  // ANÁLISIS SOLO DEL ADICIONAL: desglose natural vs. vecino, cada uno con
+  // su propia línea base de azar (el conjunto "natural" siempre son 6
+  // números fijos → 6/39; el conjunto "vecino" varía por bordes 1/39).
+  const adicionalNaturalPct = nAdicional > 0
+    ? Math.round((drawsWithAdicional.filter(r => r.adicionalIsNatural).length / nAdicional) * 100)
+    : null;
+  const adicionalPartnerPct = nAdicional > 0
+    ? Math.round((drawsWithAdicional.filter(r => r.adicionalIsPartner).length / nAdicional) * 100)
+    : null;
+  const adicionalNaturalBaselinePct = nAdicional > 0
+    ? Math.round((drawsWithAdicional.reduce((s, r) => s + r.immediateNaturalSetSize, 0) / nAdicional / 39) * 100)
+    : null;
+  const adicionalPartnerBaselinePct = nAdicional > 0
+    ? Math.round((drawsWithAdicional.reduce((s, r) => s + r.immediatePartnerSetSize, 0) / nAdicional / 39) * 100)
+    : null;
+
+  const avgTotalWith7 = nAdicional > 0
+    ? drawsWithAdicional.reduce((s, r) => s + r.totalInheritedWith7, 0) / nAdicional
+    : null;
+  const avgTotalWith7Baseline = nAdicional > 0
+    ? (drawsWithAdicional.reduce((s, r) => s + r.baselineInmediata, 0) / nAdicional) + (adicionalBaselinePct / 100)
+    : null;
+  const herenciaDetalle = {
+    avgNatural: avgInmediataNatural,
+    avgPartner: avgInmediataPartner,
+    adicionalSampleSize: nAdicional,
+    adicionalInheritedPct,
+    adicionalBaselinePct,
+    adicionalNaturalPct,
+    adicionalPartnerPct,
+    adicionalNaturalBaselinePct,
+    adicionalPartnerBaselinePct,
+    avgTotalWith7,
+    avgTotalWith7Baseline,
+  };
+
+  // MEJORA #5: distribución de categorías de premio del boleto autogenerado
+  const categoryCounts = {};
+  PRIZE_TIERS.forEach(t => { categoryCounts[t.tier] = 0; });
+  categoryCounts[0] = 0;
+  rows.forEach(r => { categoryCounts[r.prizeInfo.tier]++; });
+  const anyPrizeCount = rows.filter(r => r.prizeInfo.tier > 0).length;
+  const anyPrizePct = Math.round((anyPrizeCount / n) * 100);
+  const avgMatches = rows.reduce((s, r) => s + r.prizeInfo.matches, 0) / n;
+
   return {
     rows,
     total: rows.length,
     ruleAverages,
-    leader: { name: leader[0], avg: leader[1] },
+    baselineAverages,
+    edges,
+    leader,
+    leaderByReal,
     posStats,
     posStatsEstricto,
     strictShareOfHits,
+    herenciaDetalle,
     saludPct: Math.round((saludOkCount / n) * 100),
     herenciaDominante: inmediataAvg === loteAvg ? 'Empate' : (inmediataAvg > loteAvg ? 'Inmediata' : 'Lote'),
     herenciaAvgs: { inmediata: inmediataAvg, lote: loteAvg },
+    categoryCounts,
+    anyPrizeCount,
+    anyPrizePct,
+    avgTicketMatches: avgMatches,
   };
 }
 
@@ -3425,8 +3933,24 @@ function generateStrategicAnalysis(data) {
     bullets.push(`⚠️ <strong>Muestra pequeña (${n} sorteos):</strong> las conclusiones son orientativas. Se recomienda auditar 50–100 sorteos para mayor confiabilidad estadística.`);
   }
 
-  // 1. Algoritmo líder
-  bullets.push(`🏆 <strong>${data.leader.name}</strong> fue la función más efectiva en este periodo, con un promedio de <strong>${data.leader.avg.toFixed(2)}/6</strong> aciertos por sorteo (≈${pct(data.leader.avg)}% de la combinación ganadora).`);
+  // 1. Algoritmo líder — MEJORA: ahora por Ventaja sobre el azar, no por valor crudo
+  if (data.leader.hasClearEdge) {
+    bullets.push(`🏆 <strong>${data.leader.name}</strong> fue la regla con mejor ventaja real sobre el azar en este periodo: <strong>${data.leader.avg.toFixed(2)}/6</strong> aciertos por sorteo (+${data.leader.edge.toFixed(2)} sobre lo esperado por puro azar).`);
+  } else {
+    bullets.push(`🏆 Ninguna regla mostró una ventaja clara sobre el azar en este periodo (la mejor, <strong>${data.leader.name}</strong>, apenas +${data.leader.edge.toFixed(2)}). No hay un "algoritmo líder" confiable todavía — trata cualquier diferencia pequeña como ruido hasta auditar más sorteos.`);
+  }
+  if (data.leaderByReal.name !== data.leader.name) {
+    bullets.push(`⚠️ Ojo: <strong>${data.leaderByReal.name}</strong> tiene el promedio "real" más alto (${data.leaderByReal.avg.toFixed(2)}/6), pero su conjunto de candidatos también es más grande — por eso el azar ya esperaría más ahí. Al descontar eso, no es la que mejor le gana al azar.`);
+  }
+
+  // 1b. MEJORA #1 — ¿le ganan las reglas al azar?
+  const winners = Object.entries(data.edges).filter(([, e]) => e > 0.15).map(([k]) => k);
+  const losers = Object.entries(data.edges).filter(([, e]) => e <= 0).map(([k]) => k);
+  if (winners.length > 0) {
+    bullets.push(`📐 Comparado contra una línea base aleatoria (mismo tamaño de conjunto, puro azar): <strong>${winners.join(', ')}</strong> ${winners.length === 1 ? 'le gana' : 'le ganan'} de forma clara al azar. ${losers.length > 0 ? `En cambio, <strong>${losers.join(', ')}</strong> ${losers.length === 1 ? 'no supera' : 'no superan'} lo que se esperaría por pura suerte — su "efectividad" ahí es más ruido que señal.` : ''}`);
+  } else {
+    bullets.push(`📐 Ninguna regla superó claramente a la línea base aleatoria en este periodo — con esta muestra, no hay evidencia sólida de que algo le esté ganando al azar. Considera auditar más sorteos antes de confiar en cualquier regla.`);
+  }
 
   // 2. Asistente Secuencial — mejores y peores posiciones
   const seqAvg = data.ruleAverages['Asistente Secuencial'];
@@ -3453,6 +3977,21 @@ function generateStrategicAnalysis(data) {
     bullets.push(`🧬 <strong>Herencia Inmediata</strong> y <strong>Herencia de Lote</strong> mostraron efectividad casi idéntica (${inmediata.toFixed(2)} vs. ${lote.toFixed(2)}) — ambas fuentes aportan valor de forma equivalente.`);
   }
 
+  // 4b. Detalle de Herencia Inmediata: naturales vs. vecinos, y el Adicional (7ma bola)
+  const hd = data.herenciaDetalle;
+  bullets.push(`🔍 Desglosando Herencia Inmediata: en promedio <strong>${hd.avgNatural.toFixed(2)}</strong> de los 6 números son repetición exacta del sorteo anterior ("naturales") y <strong>${hd.avgPartner.toFixed(2)}</strong> son vecinos (±1).`);
+  if (hd.adicionalSampleSize > 0) {
+    const adicionalDeficit = hd.adicionalInheritedPct - hd.adicionalBaselinePct;
+    const naturalDeficit = hd.adicionalNaturalPct - hd.adicionalNaturalBaselinePct;
+    const partnerDeficit = hd.adicionalPartnerPct - hd.adicionalPartnerBaselinePct;
+    bullets.push(`🎱 El número <strong>Adicional</strong> por sí solo: como natural ${hd.adicionalNaturalPct}% (azar ${hd.adicionalNaturalBaselinePct}%, ${naturalDeficit >= 0 ? '+' : ''}${naturalDeficit}pts) y como vecino ${hd.adicionalPartnerPct}% (azar ${hd.adicionalPartnerBaselinePct}%, ${partnerDeficit >= 0 ? '+' : ''}${partnerDeficit}pts) — total heredado ${hd.adicionalInheritedPct}% vs. azar ${hd.adicionalBaselinePct}% (${adicionalDeficit >= 0 ? '+' : ''}${adicionalDeficit}pts). ${Math.abs(adicionalDeficit) <= 10
+      ? 'La diferencia es chica y compatible con ruido estadístico (n=' + hd.adicionalSampleSize + ') — no hay evidencia sólida de que el Adicional herede distinto al azar.'
+      : (adicionalDeficit < 0 ? 'El Adicional hereda MENOS de lo esperado por azar — señal de que, a diferencia de los 6 números principales, no conviene tratarlo con la misma lógica de herencia.' : 'El Adicional hereda MÁS de lo esperado por azar — a diferencia de lo visto en otras corridas, aquí sí podría aportar señal.')
+    } Contando las 7 bolas del sorteo (6 + Adicional), el total heredado promedio es <strong>${hd.avgTotalWith7.toFixed(2)}/7</strong> (azar: ${hd.avgTotalWith7Baseline.toFixed(2)}/7).`);
+  } else {
+    bullets.push(`🎱 Tu historial no trae el número Adicional registrado, así que no se pudo analizar por separado.`);
+  }
+
   // 5. Salud
   if (data.saludPct >= 60) {
     bullets.push(`❤️ El <strong>${data.saludPct}%</strong> de las combinaciones ganadoras cumplió el umbral de salud (≥${HEALTH_PASS_THRESHOLD}%) — el filtro de salud está bien calibrado y vale la pena exigirlo al armar boletos.`);
@@ -3470,16 +4009,53 @@ function generateStrategicAnalysis(data) {
     bullets.push(`🔒 En este periodo, ningún acierto del Asistente Secuencial tuvo doble confirmación (Pool/Hot <strong>y</strong> Top-5% simultáneamente) — las dos señales casi no coincidieron en el número exacto ganador.`);
   }
 
-  // 7. Recomendación final combinando top-2 reglas
-  const top2 = Object.entries(data.ruleAverages).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
-  bullets.push(`🎯 <strong>Recomendación:</strong> para maximizar aciertos, prioriza combinar <strong>${top2[0]}</strong> con <strong>${top2[1]}</strong> — fueron las reglas más consistentes de este backtest.`);
+  // 7. MEJORA #4 — Score Combinado
+  const combinadoAvg = data.ruleAverages['Combinado (Score Ponderado)'];
+  const combinadoEdge = data.edges['Combinado (Score Ponderado)'];
+  bullets.push(`⚙️ El <strong>Score Combinado</strong> (con los pesos actuales) acertó en promedio <strong>${combinadoAvg.toFixed(2)}/6</strong>, ${combinadoEdge > 0 ? `+${combinadoEdge.toFixed(2)} sobre el azar` : `${combinadoEdge.toFixed(2)} respecto al azar (sin ventaja clara)`}. Prueba distintos pesos en el panel de arriba y vuelve a auditar para buscar la combinación con mejor ventaja histórica.`);
+
+  // 8. MEJORA #5 — Boleto autogenerado / categorías de premio
+  bullets.push(`🎟️ Si hubieras seguido siempre la sugerencia #1 del asistente (boleto 100% autogenerado, sin ver el resultado), habrías acertado en promedio <strong>${data.avgTicketMatches.toFixed(2)}/6</strong> por sorteo, y en el <strong>${data.anyPrizePct}%</strong> de los sorteos ese boleto habría caído en alguna categoría de premio.`);
+
+  // 9. MEJORA #3 — Consistencia Train/Test (si se ejecutó)
+  if (data.splitData) {
+    const { reciente, antigua } = data.splitData;
+    if (!reciente.leader.hasClearEdge && !antigua.leader.hasClearEdge) {
+      bullets.push(`🔬 La validación por mitades no encuentra ninguna regla con ventaja clara sobre el azar en ninguna de las dos mitades — refuerza la idea de que, por ahora, ninguna "gana" de verdad.`);
+    } else if (reciente.leader.name === antigua.leader.name && reciente.leader.hasClearEdge && antigua.leader.hasClearEdge) {
+      bullets.push(`🔬 La validación por mitades confirma que <strong>${reciente.leader.name}</strong> le gana al azar tanto en la mitad reciente (+${reciente.leader.edge.toFixed(2)}) como en la antigua (+${antigua.leader.edge.toFixed(2)}) — buena señal de que no es solo suerte de este historial.`);
+    } else {
+      bullets.push(`🔬 La validación por mitades muestra que el líder <strong>cambia</strong> entre la mitad reciente (${reciente.leader.name}) y la antigua (${antigua.leader.name}) — trata los resultados de este backtest con cautela, podrían no generalizar a sorteos futuros.`);
+    }
+  }
+
+  // 10. Recomendación final — ahora ordenada por Ventaja sobre el azar, no por valor crudo
+  const top2ByEdge = Object.entries(data.ruleAverages).sort((a, b) => data.edges[b[0]] - data.edges[a[0]]).slice(0, 2).map(x => x[0]);
+  const top2HaveEdge = data.edges[top2ByEdge[0]] > 0 && data.edges[top2ByEdge[1]] > 0;
+  if (top2HaveEdge) {
+    bullets.push(`🎯 <strong>Recomendación:</strong> para maximizar aciertos, prioriza combinar <strong>${top2ByEdge[0]}</strong> (+${data.edges[top2ByEdge[0]].toFixed(2)}) con <strong>${top2ByEdge[1]}</strong> (+${data.edges[top2ByEdge[1]].toFixed(2)}) — fueron las que mejor le ganaron al azar en este backtest.`);
+  } else {
+    bullets.push(`🎯 <strong>Recomendación:</strong> con este historial, ninguna combinación de reglas muestra una ventaja sólida sobre el azar — antes de "priorizar" alguna, audita más sorteos o revisa la validación Train/Test para confirmar si hay una señal real.`);
+  }
 
   return `<ul style="padding-left:18px;margin:0;">${bullets.map(b => `<li style="margin-bottom:8px;">${b}</li>`).join('')}</ul>`;
 }
 
 function renderBacktestResults(data) {
-  document.getElementById('kpiLeader').textContent = data.leader.name;
-  document.getElementById('kpiLeaderSub').textContent = `${data.leader.avg.toFixed(2)} aciertos/sorteo (${data.total} sorteos)`;
+  if (data.leader.hasClearEdge) {
+    document.getElementById('kpiLeader').textContent = data.leader.name;
+    document.getElementById('kpiLeader').style.color = 'var(--gold)';
+  } else {
+    document.getElementById('kpiLeader').textContent = 'Ninguna clara';
+    document.getElementById('kpiLeader').style.color = 'var(--text3)';
+  }
+  const leaderEdge = data.leader.edge;
+  const leaderEdgeStr = leaderEdge > 0 ? `+${leaderEdge.toFixed(2)} sobre el azar` : `${leaderEdge.toFixed(2)} vs. azar (¡no le gana!)`;
+  const bestRealNote = data.leaderByReal.name !== data.leader.name
+    ? ` · "${data.leaderByReal.name}" tiene el valor real más alto (${data.leaderByReal.avg.toFixed(2)}), pero no es la mejor ventaja`
+    : '';
+  document.getElementById('kpiLeaderSub').textContent =
+    `${data.leader.name}: ${data.leader.avg.toFixed(2)} aciertos/sorteo (${data.total} sorteos) · ${leaderEdgeStr}${bestRealNote}`;
 
   document.getElementById('kpiSeq').textContent = data.ruleAverages['Asistente Secuencial'].toFixed(2);
   document.getElementById('kpiPool').textContent = data.ruleAverages['Pool'].toFixed(2);
@@ -3491,7 +4067,45 @@ function renderBacktestResults(data) {
   document.getElementById('kpiSalud').textContent = data.saludPct + '%';
   document.getElementById('kpiSalud').style.color = data.saludPct >= 50 ? 'var(--green)' : 'var(--red)';
 
-  // Positional breakdown cards
+  // MEJORA #1: tabla Reglas vs. Azar
+  const baselineOrder = Object.entries(data.ruleAverages).sort((a, b) => b[1] - a[1]);
+  document.getElementById('btBaselineBody').innerHTML = baselineOrder.map(([name, val]) => {
+    const base = data.baselineAverages[name];
+    const edge = data.edges[name];
+    const edgeColor = edge > 0.15 ? 'var(--green)' : (edge > -0.05 ? 'var(--gold)' : 'var(--red)');
+    const edgeStr = edge >= 0 ? `+${edge.toFixed(2)}` : edge.toFixed(2);
+    return `<tr>
+      <td>${name}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${val.toFixed(2)}/6</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text3);">${base.toFixed(2)}/6</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${edgeColor};">${edgeStr}</td>
+    </tr>`;
+  }).join('');
+
+  // Detalle de Herencia Inmediata (6 números + Adicional)
+  const hd = data.herenciaDetalle;
+  document.getElementById('kpiHerenciaNatural').textContent = hd.avgNatural.toFixed(2);
+  document.getElementById('kpiHerenciaPartner').textContent = hd.avgPartner.toFixed(2);
+  if (hd.adicionalSampleSize > 0) {
+    document.getElementById('kpiHerenciaAdicional').textContent = hd.adicionalInheritedPct + '%';
+    document.getElementById('kpiHerenciaAdicionalSub').textContent =
+      `azar: ${hd.adicionalBaselinePct}% · n=${hd.adicionalSampleSize}`;
+    const natColor = hd.adicionalNaturalPct > hd.adicionalNaturalBaselinePct ? 'var(--green)' : 'var(--text3)';
+    const parColor = hd.adicionalPartnerPct > hd.adicionalPartnerBaselinePct ? 'var(--green)' : 'var(--text3)';
+    document.getElementById('kpiHerenciaAdicionalSplit').innerHTML =
+      `<span style="color:${natColor};">↳ como natural: ${hd.adicionalNaturalPct}% (azar ${hd.adicionalNaturalBaselinePct}%)</span><br>` +
+      `<span style="color:${parColor};">↳ como vecino: ${hd.adicionalPartnerPct}% (azar ${hd.adicionalPartnerBaselinePct}%)</span>`;
+    document.getElementById('kpiHerenciaTotal7').textContent = hd.avgTotalWith7.toFixed(2) + ' / 7';
+    document.getElementById('kpiHerenciaTotal7Sub').textContent = `azar: ${hd.avgTotalWith7Baseline.toFixed(2)} / 7`;
+  } else {
+    document.getElementById('kpiHerenciaAdicional').textContent = 'Sin datos';
+    document.getElementById('kpiHerenciaAdicionalSub').textContent = 'tu historial no trae el número Adicional';
+    document.getElementById('kpiHerenciaAdicionalSplit').textContent = '';
+    document.getElementById('kpiHerenciaTotal7').textContent = '—';
+    document.getElementById('kpiHerenciaTotal7Sub').textContent = '';
+  }
+
+  // Positional breakdown cards — MEJORA #2: con intervalo de confianza (Wilson)
   const posGrid = document.getElementById('btPosGrid');
   posGrid.innerHTML = data.posStats.map(p => {
     const color = p.pct >= 50 ? 'var(--green)' : (p.pct >= 25 ? 'var(--gold)' : 'var(--red)');
@@ -3499,11 +4113,12 @@ function renderBacktestResults(data) {
       <div class="analysis-card" style="text-align:center;padding:12px 6px;">
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">P${p.pos + 1}</div>
         <div style="font-size:20px;font-weight:700;color:${color};margin:4px 0;">${p.pct}%</div>
+        <div style="font-size:8px;color:var(--text3);">±${p.ciMargin}% (95% conf.)</div>
         <div style="font-size:9px;color:var(--text3);">${p.hits}/${data.total} sorteos</div>
       </div>`;
   }).join('');
 
-  // Strict Intersection (AND) — KPIs + positional grid
+  // Strict Intersection (AND) — KPIs + positional grid (también con intervalo de confianza)
   document.getElementById('kpiStrict').textContent = data.ruleAverages['Secuencial (Intersección Estricta)'].toFixed(2) + ' / 6';
   document.getElementById('kpiStrictShare').textContent = data.strictShareOfHits + '%';
   const posGridStrict = document.getElementById('btPosGridStrict');
@@ -3513,28 +4128,40 @@ function renderBacktestResults(data) {
       <div class="analysis-card" style="text-align:center;padding:12px 6px;border-color:rgba(159,122,255,0.35);">
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">P${p.pos + 1} 🔒</div>
         <div style="font-size:20px;font-weight:700;color:${color};margin:4px 0;">${p.pct}%</div>
+        <div style="font-size:8px;color:var(--text3);">±${p.ciMargin}% (95% conf.)</div>
         <div style="font-size:9px;color:var(--text3);">${p.hits}/${data.total} sorteos</div>
       </div>`;
   }).join('');
 
-  // Ranking bars
+  // Ranking bars — ahora con marcador de línea base (azar) superpuesto
   const maxAvg = Math.max(...Object.values(data.ruleAverages), 0.01);
   const rankOrder = Object.entries(data.ruleAverages).sort((a, b) => b[1] - a[1]);
   const barColors = {
     'Asistente Secuencial': 'var(--red)', 'Hot': '#FF4444', 'Pool': 'var(--green)',
     'Herencia Inmediata': '#FFB800', 'Herencia Lote': '#4AC8FF', 'Deuda Geométrica': '#9F7AFF',
-    'Secuencial (Intersección Estricta)': '#C9A8FF'
+    'Secuencial (Intersección Estricta)': '#C9A8FF', 'Combinado (Score Ponderado)': '#4AFFD4'
   };
-  document.getElementById('btRankingBars').innerHTML = rankOrder.map(([name, val]) => `
+  document.getElementById('btRankingBars').innerHTML = rankOrder.map(([name, val]) => {
+    const base = data.baselineAverages[name];
+    const basePct = Math.min(100, (base / maxAvg) * 100);
+    return `
     <div style="margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px;">
-        <span>${name}</span><span style="font-family:'JetBrains Mono',monospace;">${val.toFixed(2)} / 6</span>
+        <span>${name}</span><span style="font-family:'JetBrains Mono',monospace;">${val.toFixed(2)} / 6 <span style="color:var(--text3);font-size:9px;">(azar: ${base.toFixed(2)})</span></span>
       </div>
-      <div class="health-bar-bg">
+      <div class="health-bar-bg" style="position:relative;">
         <div class="health-bar-fill" style="width:${(val / maxAvg) * 100}%;background:${barColors[name] || 'var(--red)'};"></div>
+        <div style="position:absolute;top:-2px;bottom:-2px;left:${basePct}%;width:2px;background:#fff;opacity:0.6;" title="Línea base aleatoria"></div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+
+  // MEJORA #3: Consistencia Train/Test
+  renderSplitComparison(data.splitData);
+
+  // MEJORA #5: Boleto autogenerado & categorías de premio
+  renderPrizeCategories(data);
 
   // Strategic analysis & conclusions
   document.getElementById('btStrategicAnalysis').innerHTML = generateStrategicAnalysis(data);
@@ -3546,6 +4173,7 @@ function renderBacktestResults(data) {
     const saludBadge = r.saludOk
       ? `<span style="color:var(--green);">✔ ${r.saludScore}%</span>`
       : `<span style="color:var(--red);">✘ ${r.saludScore}%</span>`;
+    const catColor = r.prizeInfo.tier === 0 ? 'var(--text3)' : (r.prizeInfo.tier <= 3 ? 'var(--gold)' : 'var(--green)');
     const detailId = `bt-detail-${r.id}`;
     return `
       <tr onclick="toggleBtDetail('${detailId}')" style="cursor:pointer;" title="Toca la fila para ver el detalle por posición">
@@ -3555,17 +4183,98 @@ function renderBacktestResults(data) {
         <td style="text-decoration:underline dotted;">${r.aciertosSecuencial}/6 🔍</td>
         <td style="color:#C9A8FF;">${r.aciertosSecuencialEstricto}/6 🔒</td>
         <td>${r.aciertosHot}/6</td>
-        <td>${r.aciertosInmediata}/6</td>
+        <td title="Naturales: ${r.immediateNaturalCount} · Vecinos: ${r.immediatePartnerCount}${r.hasAdicional ? ` · Adicional ${r.adicionalInherited ? 'SÍ heredado' : 'no heredado'}` : ''}">${r.aciertosInmediata}/6</td>
         <td>${r.aciertosLote}/6</td>
         <td>${r.aciertosDeuda}/6</td>
+        <td>${r.aciertosCombinado}/6</td>
         <td>${saludBadge}</td>
+        <td style="color:${catColor};font-size:9px;" title="Boleto: ${r.autoTicket.join(', ')}">${r.prizeInfo.label}</td>
         <td><span style="font-size:9px;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;">${r.topFunc}</span></td>
       </tr>
       <tr id="${detailId}" style="display:none;">
-        <td colspan="11" style="background:var(--bg4);padding:10px 14px;">
+        <td colspan="13" style="background:var(--bg4);padding:10px 14px;">
           ${renderSeqDetailChips(r.posDetails)}
+          <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border2);font-size:10px;color:var(--text2);">
+            🧬 <strong>Herencia Inmediata:</strong> ${r.immediateNaturalCount} naturales + ${r.immediatePartnerCount} vecinos = ${r.aciertosInmediata}/6
+            ${r.hasAdicional ? ` &nbsp;·&nbsp; Adicional (${r.nums.length ? '' : ''}): ${r.adicionalInherited ? `<span style="color:var(--green);">✔ heredado${r.adicionalIsNatural ? ' (natural)' : ' (vecino)'}</span>` : '<span style="color:var(--text3);">no heredado</span>'}` : ' &nbsp;·&nbsp; <span style="color:var(--text3);">sin dato de Adicional</span>'}
+          </div>
         </td>
       </tr>`;
+  }).join('');
+}
+
+// MEJORA #3: renderiza la comparación de consistencia entre las 2 mitades
+// cronológicas del historial evaluado (o la oculta si no se pidió).
+function renderSplitComparison(splitData) {
+  const section = document.getElementById('btSplitSection');
+  if (!splitData) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  const { reciente, antigua } = splitData;
+  const allNames = Object.keys(reciente.ruleAverages);
+
+  document.getElementById('btSplitHeadReciente').textContent = `Mitad Reciente (n=${reciente.total})`;
+  document.getElementById('btSplitHeadAntigua').textContent = `Mitad Antigua (n=${antigua.total})`;
+
+  // Veredicto: ¿el líder por VENTAJA (no valor crudo) es el mismo en ambas
+  // mitades? ¿las ventajas cambian mucho entre mitades? Umbral de "cambio
+  // grande" en escala de ventaja (no de valor crudo), más estricto porque
+  // las ventajas suelen ser pequeñas (~±0.3).
+  let bigDiffCount = 0;
+  allNames.forEach(name => {
+    const diff = Math.abs(reciente.edges[name] - antigua.edges[name]);
+    if (diff > 0.35) bigDiffCount++;
+  });
+  const sameLeader = reciente.leader.name === antigua.leader.name;
+  const bothHaveEdge = reciente.leader.hasClearEdge && antigua.leader.hasClearEdge;
+  const verdictEl = document.getElementById('btSplitVerdict');
+  if (sameLeader && bothHaveEdge && bigDiffCount === 0) {
+    verdictEl.innerHTML = `✅ <span style="color:var(--green);">Consistente:</span> <strong>${reciente.leader.name}</strong> le gana al azar en ambas mitades (reciente +${reciente.leader.edge.toFixed(2)}, antigua +${antigua.leader.edge.toFixed(2)}) y no hay cambios grandes de ventaja entre reglas.`;
+  } else if (!bothHaveEdge) {
+    verdictEl.innerHTML = `🟡 <span style="color:var(--gold);">Sin ventaja sólida:</span> ninguna regla le gana claramente al azar en ${!reciente.leader.hasClearEdge && !antigua.leader.hasClearEdge ? 'ninguna de las dos mitades' : (!reciente.leader.hasClearEdge ? 'la mitad reciente' : 'la mitad antigua')} — cuidado con interpretar el "líder" como algo confiable todavía.`;
+  } else if (bigDiffCount <= 1) {
+    verdictEl.innerHTML = `🟡 <span style="color:var(--gold);">Parcialmente consistente:</span> hay alguna variación en la ventaja entre mitades — normal con muestras chicas, pero vale la pena auditar más sorteos.`;
+  } else {
+    verdictEl.innerHTML = `⚠️ <span style="color:var(--red);">Inconsistente:</span> varias reglas cambian bastante de ventaja entre mitades (líder: "${reciente.leader.name}" reciente vs. "${antigua.leader.name}" antigua) — cuidado con sobreajustar conclusiones a este historial específico.`;
+  }
+
+  document.getElementById('btSplitBody').innerHTML = allNames.map(name => {
+    const rReal = reciente.ruleAverages[name], rAzar = reciente.baselineAverages[name], rEdge = reciente.edges[name];
+    const aReal = antigua.ruleAverages[name], aAzar = antigua.baselineAverages[name], aEdge = antigua.edges[name];
+    const edgeColor = (e) => e > 0.15 ? 'var(--green)' : (e > -0.05 ? 'var(--gold)' : 'var(--red)');
+    const edgeStr = (e) => e >= 0 ? `+${e.toFixed(2)}` : e.toFixed(2);
+    return `<tr>
+      <td>${name}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${rReal.toFixed(2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text3);">${rAzar.toFixed(2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${edgeColor(rEdge)};">${edgeStr(rEdge)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${aReal.toFixed(2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text3);">${aAzar.toFixed(2)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${edgeColor(aEdge)};">${edgeStr(aEdge)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// MEJORA #5: renderiza el resumen del boleto autogenerado y la
+// distribución de categorías de premio simuladas sobre el historial.
+function renderPrizeCategories(data) {
+  document.getElementById('kpiTicketAvg').textContent = data.avgTicketMatches.toFixed(2) + ' / 6';
+  document.getElementById('kpiTicketPrizePct').textContent = data.anyPrizePct + '%';
+
+  const tierLabels = { 0: 'Sin premio', ...Object.fromEntries(PRIZE_TIERS.map(t => [t.tier, t.label])) };
+  const orderedTiers = [1, 2, 3, 4, 5, 6, 7, 0];
+  document.getElementById('btCategoryBody').innerHTML = orderedTiers.map(tier => {
+    const count = data.categoryCounts[tier] || 0;
+    const pct = data.total > 0 ? Math.round((count / data.total) * 100) : 0;
+    const color = tier === 0 ? 'var(--text3)' : (tier <= 3 ? 'var(--gold)' : 'var(--green)');
+    return `<tr>
+      <td style="color:${color};">${tierLabels[tier]}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${count}</td>
+      <td style="font-family:'JetBrains Mono',monospace;">${pct}%</td>
+    </tr>`;
   }).join('');
 }
 
@@ -3578,6 +4287,7 @@ function renderSeqDetailChips(posDetails) {
 
   const criteriaLabel = (c) => {
     const labels = [];
+    if (c.includes('inmediata')) labels.push('Herencia Inmediata (rango)');
     if (c.includes('pool')) labels.push('Pool (rango)');
     if (c.includes('hot')) labels.push('Hot (rango)');
     if (c.includes('top5')) labels.push('Top-5 %');
