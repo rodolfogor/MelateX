@@ -1595,6 +1595,9 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 .num-chip.hit { background: rgba(0,200,83,0.12); border-color: var(--green); color: var(--text); }
 .num-chip.pending { background: rgba(255,184,0,0.15); border-color: var(--gold); color: var(--text); }
 .num-chip.alive { background: rgba(159,122,255,0.15); border-color: #9F7AFF; color: var(--text); }
+.num-chip-wrap { display:inline-flex; flex-direction:column; align-items:center; gap:0px; margin:2px; }
+.num-chip-wrap .num-chip { margin:0; }
+.num-chip-emoji { font-size:10px; line-height:1; height:11px; }
 .virgin-wall { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:16px; }
 .capas-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12px; }
 .capas-table th { text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text3); padding:6px 8px; border-bottom:1px solid var(--border2); }
@@ -2194,13 +2197,14 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
         <span style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;"></span>Ya cayó exacto en esta posición</span>
         <span style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block;"></span>Ya salió en otra posición, falta aquí</span>
         <span style="display:flex;align-items:center;gap:6px;"><span style="width:9px;height:9px;border-radius:50%;background:#9F7AFF;display:inline-block;"></span>Vírgen — no ha salido en ningún lado</span>
+        <span style="display:flex;align-items:center;gap:6px;">🔥 5+ apariciones en últimos 25 sorteos · 🧊 solo 1 aparición en últimos 25</span>
       </div>
       <div class="pos-panel-grid" id="capasPosGrid"></div>
 
       <div class="section-title">Historial (capas)</div>
       <div style="overflow-x:auto;">
         <table class="capas-table">
-          <thead><tr><th>Sorteo</th><th>Números</th><th>Universo</th><th>Consumio</th></tr></thead>
+          <thead><tr><th>Sorteo</th><th>Números</th><th>Universo</th><th>Rompe</th></tr></thead>
           <tbody id="capasLogBody"></tbody>
         </table>
       </div>
@@ -4605,6 +4609,17 @@ function renderCapas() {
   const totalIntrusosPos = rows.reduce((a,r) => a+r.intrusosPos.length, 0);
   const pctPosicional = totalSlots ? Math.round((totalHits/totalSlots)*1000)/10 : 0;
 
+  // Frecuencia en los ultimos 25 sorteos (ventana aparte de CAPAS_VENTANA), para marcar calientes/frios
+  const ultimos25 = HISTORY.slice().sort((a,b)=>b.id-a.id).slice(0,25);
+  const freq25 = {};
+  ultimos25.forEach(h => h.nums.forEach(n => { freq25[n] = (freq25[n]||0)+1; }));
+  const emojiPara = (n) => {
+    const f = freq25[n] || 0;
+    if (f >= 5) return '🔥';
+    if (f === 1) return '🧊';
+    return '';
+  };
+
   const cardsEl = document.getElementById('capasCards');
   if (cardsEl) {
     cardsEl.innerHTML = [
@@ -4619,7 +4634,8 @@ function renderCapas() {
   if (wallEl) {
     wallEl.innerHTML = UNIVERSE_TABLE.map(n => {
       const alive = virginsRemaining.includes(n);
-      return `<span class="num-chip${alive ? ' alive' : ''}">${n}</span>`;
+      const emoji = alive ? emojiPara(n) : '';
+      return `<span class="num-chip-wrap"><span class="num-chip-emoji">${emoji}</span><span class="num-chip${alive ? ' alive' : ''}">${n}</span></span>`;
     }).join('');
   }
 
@@ -4631,7 +4647,8 @@ function renderCapas() {
         const isPending = pendientes[i].includes(n);
         const isVirgin = !everAppeared.has(n);
         const cls = isExact ? ' hit' : (isPending ? ' pending' : (isVirgin ? ' alive' : ''));
-        return `<span class="num-chip${cls}">${n}</span>`;
+        const emoji = (isPending || isVirgin) ? emojiPara(n) : '';
+        return `<span class="num-chip-wrap"><span class="num-chip-emoji">${emoji}</span><span class="num-chip${cls}">${n}</span></span>`;
       }).join('');
       return `<div class="pos-panel"><div class="pos-panel-title">Posición ${i+1}</div>${chips}</div>`;
     }).join('');
