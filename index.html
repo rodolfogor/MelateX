@@ -2385,7 +2385,9 @@ let focusedNum = null;
 // ============================================================
 
 async function init() {
-  await generateData();
+  // Carga el JSON que actualiza el workflow al abrir la aplicación.
+  // Si no hay red, syncData conserva los datos ya guardados localmente.
+  await syncData({ silent: true });
   renderGrid();
   addTicket();
   renderHistory();
@@ -2412,8 +2414,8 @@ function updateNextDraw() {
     `${days[next.getDay()]} ${next.getDate()}/${next.getMonth()+1}`;
 }
 
-async function syncData() {
-  showNotif('Buscando datos actualizados...', 'info');
+async function syncData({ silent = false } = {}) {
+  if (!silent) showNotif('Buscando datos actualizados...', 'info');
 
   try {
     // Leemos el archivo JSON del repo (cache-busting para evitar versiones viejas guardadas por el navegador)
@@ -2438,10 +2440,13 @@ async function syncData() {
     renderGrid();
     renderAnalysis();
     renderHistory();
-    showNotif('Sincronización Exitosa: Datos actualizados al sorteo más reciente', 'success');
+    if (!silent) {
+      const latest = data.reduce((max, item) => Math.max(max, Number(item.sorteo) || 0), 0);
+      showNotif(`Sincronización exitosa: datos hasta el sorteo #${latest}.`, 'success');
+    }
   } catch (error) {
     console.error("Error al cargar datos externos:", error);
-    showNotif('Error de conexión o archivo no encontrado.', 'error');
+    if (!silent) showNotif('Error de conexión o archivo no encontrado.', 'error');
   }
 }
 
