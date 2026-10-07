@@ -1602,6 +1602,11 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 .capas-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12px; }
 .capas-table th { text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text3); padding:6px 8px; border-bottom:1px solid var(--border2); }
 .capas-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+.capas-range-controls { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; padding:12px; margin-bottom:14px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+.capas-range-field { display:flex; flex-direction:column; gap:5px; }
+.capas-range-field label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; }
+.capas-range-field input { width:106px; box-sizing:border-box; padding:8px 9px; color:var(--text); background:var(--bg3); border:1px solid var(--border2); border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:12px; }
+.capas-range-status { flex-basis:100%; font-size:10px; color:var(--text3); min-height:13px; }
 
 </style>
 </head>
@@ -2184,8 +2189,22 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 
       <div class="section-title" style="margin-bottom:12px;">🧬 Capas — Universo, Vírgenes, Pendientes e Intrusos</div>
       <p style="font-size:11px;color:var(--text3);margin-bottom:14px;line-height:1.6;">
-        Seguimiento de tus rangos por posición contra los últimos 10 sorteos reales (ventana móvil, se recalcula con cada sorteo nuevo).
+        <span id="capasDescription">Seguimiento de tus rangos por posición contra los últimos 10 sorteos reales (ventana móvil, se recalcula con cada sorteo nuevo).</span>
       </p>
+
+      <div class="capas-range-controls">
+        <div class="capas-range-field">
+          <label for="capasDesde">Sorteo desde</label>
+          <input id="capasDesde" type="number" inputmode="numeric" step="1" placeholder="Ej. 1664" onkeydown="if(event.key==='Enter') aplicarRangoCapas()">
+        </div>
+        <div class="capas-range-field">
+          <label for="capasHasta">Sorteo hasta</label>
+          <input id="capasHasta" type="number" inputmode="numeric" step="1" placeholder="Ej. 1670" onkeydown="if(event.key==='Enter') aplicarRangoCapas()">
+        </div>
+        <button class="btn-primary" style="font-size:11px;padding:8px 12px;" onclick="aplicarRangoCapas()">Analizar rango</button>
+        <button class="btn-secondary" style="font-size:11px;padding:8px 12px;" onclick="restablecerRangoCapas()">Últimos 10</button>
+        <div class="capas-range-status" id="capasRangeStatus" aria-live="polite"></div>
+      </div>
 
       <div class="stats-row" id="capasCards"></div>
 
@@ -4585,9 +4604,73 @@ const POS_TABLE = [
 ];
 const UNIVERSE_TABLE = Array.from(new Set(POS_TABLE.flat())).sort((a,b)=>a-b);
 const CAPAS_VENTANA = 10; // analiza solo los ultimos N sorteos
+let capasRange = null; // { from, to } cuando el usuario selecciona un rango manual
+
+function aplicarRangoCapas() {
+  const desdeEl = document.getElementById('capasDesde');
+  const hastaEl = document.getElementById('capasHasta');
+  const statusEl = document.getElementById('capasRangeStatus');
+  const from = Number(desdeEl?.value);
+  const to = Number(hastaEl?.value);
+
+  if (!Number.isInteger(from) || !Number.isInteger(to)) {
+    if (statusEl) statusEl.textContent = 'Indica dos números de sorteo válidos.';
+    return;
+  }
+  if (from > to) {
+    if (statusEl) statusEl.textContent = 'El sorteo inicial no puede ser mayor que el final.';
+    return;
+  }
+
+  capasRange = { from, to };
+  renderCapas();
+}
+
+function restablecerRangoCapas() {
+  capasRange = null;
+  renderCapas();
+}
 
 function renderCapas() {
-  const chronological = HISTORY.slice().sort((a,b)=>a.id-b.id).slice(-CAPAS_VENTANA);
+  const orderedHistory = HISTORY.slice().sort((a,b)=>a.id-b.id);
+  const chronological = capasRange
+    ? orderedHistory.filter(h => h.id >= capasRange.from && h.id <= capasRange.to)
+    : orderedHistory.slice(-CAPAS_VENTANA);
+  const minDraw = orderedHistory[0]?.id;
+  const maxDraw = orderedHistory[orderedHistory.length - 1]?.id;
+
+  const desdeEl = document.getElementById('capasDesde');
+  const hastaEl = document.getElementById('capasHasta');
+  const statusEl = document.getElementById('capasRangeStatus');
+  const descriptionEl = document.getElementById('capasDescription');
+  if (desdeEl && hastaEl) {
+    [desdeEl, hastaEl].forEach(el => {
+      if (minDraw !== undefined) el.min = minDraw;
+      if (maxDraw !== undefined) el.max = maxDraw;
+    });
+    if (capasRange) {
+      desdeEl.value = capasRange.from;
+      hastaEl.value = capasRange.to;
+    } else if (chronological.length) {
+      desdeEl.value = chronological[0].id;
+      hastaEl.value = chronological[chronological.length - 1].id;
+    } else {
+      desdeEl.value = '';
+      hastaEl.value = '';
+    }
+  }
+  if (descriptionEl) {
+    descriptionEl.textContent = capasRange
+      ? `Seguimiento de tus rangos por posición para los sorteos ${capasRange.from} al ${capasRange.to}.`
+      : `Seguimiento de tus rangos por posición contra los últimos ${CAPAS_VENTANA} sorteos reales (ventana móvil, se recalcula con cada sorteo nuevo).`;
+  }
+  if (statusEl) {
+    statusEl.textContent = capasRange
+      ? (chronological.length
+          ? `Analizando ${chronological.length} sorteo${chronological.length === 1 ? '' : 's'} encontrado${chronological.length === 1 ? '' : 's'} en el rango ${capasRange.from}–${capasRange.to}.`
+          : `No hay sorteos disponibles entre ${capasRange.from} y ${capasRange.to}.`)
+      : (chronological.length ? `Rango actual: ${chronological[0].id}–${chronological[chronological.length - 1].id} (últimos ${chronological.length}).` : 'No hay sorteos cargados.');
+  }
   const everAppeared = new Set();
   const exactByPos = [new Set(),new Set(),new Set(),new Set(),new Set(),new Set()];
   const rows = [];
