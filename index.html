@@ -1607,6 +1607,16 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
 .capas-range-field label { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.4px; }
 .capas-range-field input { width:106px; box-sizing:border-box; padding:8px 9px; color:var(--text); background:var(--bg3); border:1px solid var(--border2); border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:12px; }
 .capas-range-status { flex-basis:100%; font-size:10px; color:var(--text3); min-height:13px; }
+.capas-compare-results { display:none; margin:0 0 16px; padding:12px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; }
+.capas-compare-results.visible { display:block; }
+.capas-compare-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+.capas-compare-metric { padding:9px; background:var(--bg3); border-radius:7px; }
+.capas-compare-metric b { display:block; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); }
+.capas-compare-metric span { font-size:10px; color:var(--text3); }
+.capas-compare-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:11px; }
+.capas-compare-table th,.capas-compare-table td { padding:6px; border-bottom:1px solid var(--border); text-align:left; }
+.capas-compare-table th { color:var(--text3); font-size:9px; text-transform:uppercase; }
+@media(max-width:600px) { .capas-compare-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 
 </style>
 </head>
@@ -2205,6 +2215,18 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
         <button class="btn-secondary" style="font-size:11px;padding:8px 12px;" onclick="restablecerRangoCapas()">Últimos 10</button>
         <div class="capas-range-status" id="capasRangeStatus" aria-live="polite"></div>
       </div>
+
+      <div class="section-title">Comparador de rangos</div>
+      <p style="font-size:11px;color:var(--text3);margin:-6px 0 10px;line-height:1.5;">Contrasta dos periodos por frecuencia, acierto posicional e indicadores de patron.</p>
+      <div class="capas-range-controls">
+        <div class="capas-range-field"><label for="capasCompADesde">Periodo A: desde</label><input id="capasCompADesde" type="number" inputmode="numeric" step="1" placeholder="Ej. 1600" onkeydown="if(event.key==='Enter') aplicarComparacionCapas()"></div>
+        <div class="capas-range-field"><label for="capasCompAHasta">Periodo A: hasta</label><input id="capasCompAHasta" type="number" inputmode="numeric" step="1" placeholder="Ej. 1650" onkeydown="if(event.key==='Enter') aplicarComparacionCapas()"></div>
+        <div class="capas-range-field"><label for="capasCompBDesde">Periodo B: desde</label><input id="capasCompBDesde" type="number" inputmode="numeric" step="1" placeholder="Ej. 1651" onkeydown="if(event.key==='Enter') aplicarComparacionCapas()"></div>
+        <div class="capas-range-field"><label for="capasCompBHasta">Periodo B: hasta</label><input id="capasCompBHasta" type="number" inputmode="numeric" step="1" placeholder="Ej. 1700" onkeydown="if(event.key==='Enter') aplicarComparacionCapas()"></div>
+        <button class="btn-primary" style="font-size:11px;padding:8px 12px;" onclick="aplicarComparacionCapas()">Comparar</button>
+        <div class="capas-range-status" id="capasCompareStatus" aria-live="polite"></div>
+      </div>
+      <div class="capas-compare-results" id="capasCompareResults"></div>
 
       <div class="stats-row" id="capasCards"></div>
 
@@ -4605,6 +4627,7 @@ const POS_TABLE = [
 const UNIVERSE_TABLE = Array.from(new Set(POS_TABLE.flat())).sort((a,b)=>a-b);
 const CAPAS_VENTANA = 10; // analiza solo los ultimos N sorteos
 let capasRange = null; // { from, to } cuando el usuario selecciona un rango manual
+let capasComparison = null; // { aFrom, aTo, bFrom, bTo }
 
 function aplicarRangoCapas() {
   const desdeEl = document.getElementById('capasDesde');
@@ -4631,6 +4654,119 @@ function restablecerRangoCapas() {
   renderCapas();
 }
 
+function aplicarComparacionCapas() {
+  const ids = ['capasCompADesde', 'capasCompAHasta', 'capasCompBDesde', 'capasCompBHasta'];
+  const values = ids.map(id => Number(document.getElementById(id)?.value));
+  const statusEl = document.getElementById('capasCompareStatus');
+  if (!values.every(Number.isInteger)) {
+    if (statusEl) statusEl.textContent = 'Completa los cuatro limites con numeros de sorteo validos.';
+    return;
+  }
+  const [aFrom, aTo, bFrom, bTo] = values;
+  if (aFrom > aTo || bFrom > bTo) {
+    if (statusEl) statusEl.textContent = 'Cada periodo debe iniciar antes o en su sorteo final.';
+    return;
+  }
+  capasComparison = { aFrom, aTo, bFrom, bTo };
+  renderCapas();
+}
+
+function calcularMetricasComparacion(draws) {
+  const totalSlots = draws.length * 6;
+  const positionHits = [0, 0, 0, 0, 0, 0];
+  const freq = Array(40).fill(0);
+  const appearedUniverse = new Set();
+  let intrusos = 0;
+  let oddCount = 0;
+  let sumTotal = 0;
+
+  draws.forEach(draw => {
+    sumTotal += draw.nums.reduce((sum, n) => sum + n, 0);
+    draw.nums.forEach((n, i) => {
+      freq[n]++;
+      if (n % 2) oddCount++;
+      if (UNIVERSE_TABLE.includes(n)) appearedUniverse.add(n);
+      if (POS_TABLE[i].includes(n)) positionHits[i]++;
+      else intrusos++;
+    });
+  });
+  const totalHits = positionHits.reduce((sum, value) => sum + value, 0);
+  return {
+    draws: draws.length,
+    hitRate: totalSlots ? totalHits / totalSlots * 100 : 0,
+    intruderRate: totalSlots ? intrusos / totalSlots * 100 : 0,
+    coverage: UNIVERSE_TABLE.length ? appearedUniverse.size / UNIVERSE_TABLE.length * 100 : 0,
+    oddRate: totalSlots ? oddCount / totalSlots * 100 : 0,
+    avgSum: draws.length ? sumTotal / draws.length : 0,
+    positionHits,
+    freq
+  };
+}
+
+function renderComparacionCapas(orderedHistory, minDraw, maxDraw) {
+  const resultEl = document.getElementById('capasCompareResults');
+  const statusEl = document.getElementById('capasCompareStatus');
+  const inputIds = ['capasCompADesde', 'capasCompAHasta', 'capasCompBDesde', 'capasCompBHasta'];
+  inputIds.forEach(id => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    if (minDraw !== undefined) input.min = minDraw;
+    if (maxDraw !== undefined) input.max = maxDraw;
+  });
+  if (!capasComparison || !resultEl) return;
+
+  const { aFrom, aTo, bFrom, bTo } = capasComparison;
+  const aDraws = orderedHistory.filter(h => h.id >= aFrom && h.id <= aTo);
+  const bDraws = orderedHistory.filter(h => h.id >= bFrom && h.id <= bTo);
+  if (!aDraws.length || !bDraws.length) {
+    resultEl.classList.remove('visible');
+    if (statusEl) statusEl.textContent = `Se requieren sorteos en ambos periodos (A: ${aDraws.length}, B: ${bDraws.length}).`;
+    return;
+  }
+
+  const a = calcularMetricasComparacion(aDraws);
+  const b = calcularMetricasComparacion(bDraws);
+  const fixed = value => value.toFixed(1);
+  const delta = (bValue, aValue, suffix = '') => {
+    const value = bValue - aValue;
+    const color = value > 0 ? 'var(--green)' : value < 0 ? 'var(--red)' : 'var(--text3)';
+    return `<span style="color:${color}">${value > 0 ? '+' : ''}${fixed(value)}${suffix}</span>`;
+  };
+  const frequencyChanges = Array.from({ length: 39 }, (_, index) => index + 1)
+    .map(number => ({
+      number,
+      aRate: a.freq[number] / a.draws * 100,
+      bRate: b.freq[number] / b.draws * 100
+    }))
+    .map(item => ({ ...item, diff: item.bRate - item.aRate }))
+    .sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff))
+    .slice(0, 6);
+  const positionRows = a.positionHits.map((hits, index) => {
+    const aRate = hits / a.draws * 100;
+    const bRate = b.positionHits[index] / b.draws * 100;
+    return `<tr><td>P${index + 1}</td><td>${fixed(aRate)}%</td><td>${fixed(bRate)}%</td><td>${delta(bRate, aRate, ' pp')}</td></tr>`;
+  }).join('');
+  const frequencyRows = frequencyChanges.map(item =>
+    `<tr><td>${item.number}</td><td>${fixed(item.aRate)}%</td><td>${fixed(item.bRate)}%</td><td>${delta(item.bRate, item.aRate, ' pp')}</td></tr>`
+  ).join('');
+
+  resultEl.innerHTML = `
+    <div class="pos-panel-title">Periodo A: ${aFrom}-${aTo} (${a.draws} sorteos) &nbsp; vs &nbsp; Periodo B: ${bFrom}-${bTo} (${b.draws} sorteos)</div>
+    <div class="capas-compare-grid">
+      <div class="capas-compare-metric"><b>${fixed(a.hitRate)}% → ${fixed(b.hitRate)}%</b><span>Acierto posicional · ${delta(b.hitRate, a.hitRate, ' pp')}</span></div>
+      <div class="capas-compare-metric"><b>${fixed(a.intruderRate)}% → ${fixed(b.intruderRate)}%</b><span>Intrusos posicionales · ${delta(b.intruderRate, a.intruderRate, ' pp')}</span></div>
+      <div class="capas-compare-metric"><b>${fixed(a.coverage)}% → ${fixed(b.coverage)}%</b><span>Cobertura del universo · ${delta(b.coverage, a.coverage, ' pp')}</span></div>
+      <div class="capas-compare-metric"><b>${fixed(a.oddRate)}% → ${fixed(b.oddRate)}%</b><span>Numeros impares · ${delta(b.oddRate, a.oddRate, ' pp')}</span></div>
+      <div class="capas-compare-metric"><b>${fixed(a.avgSum)} → ${fixed(b.avgSum)}</b><span>Suma promedio por sorteo · ${delta(b.avgSum, a.avgSum)}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;overflow-x:auto;">
+      <div><div class="pos-panel-title">Acierto por posicion</div><table class="capas-compare-table"><thead><tr><th>Pos.</th><th>A</th><th>B</th><th>B - A</th></tr></thead><tbody>${positionRows}</tbody></table></div>
+      <div><div class="pos-panel-title">Mayores cambios de frecuencia</div><table class="capas-compare-table"><thead><tr><th>Num.</th><th>A</th><th>B</th><th>B - A</th></tr></thead><tbody>${frequencyRows}</tbody></table></div>
+    </div>`;
+  resultEl.classList.add('visible');
+  if (statusEl) statusEl.textContent = 'Comparacion lista. Los porcentajes de frecuencia se normalizan por sorteos de cada periodo.';
+}
+
 function renderCapas() {
   const orderedHistory = HISTORY.slice().sort((a,b)=>a.id-b.id);
   const chronological = capasRange
@@ -4638,6 +4774,7 @@ function renderCapas() {
     : orderedHistory.slice(-CAPAS_VENTANA);
   const minDraw = orderedHistory[0]?.id;
   const maxDraw = orderedHistory[orderedHistory.length - 1]?.id;
+  renderComparacionCapas(orderedHistory, minDraw, maxDraw);
 
   const desdeEl = document.getElementById('capasDesde');
   const hastaEl = document.getElementById('capasHasta');
