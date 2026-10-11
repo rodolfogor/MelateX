@@ -4815,14 +4815,20 @@ function renderCapas() {
 
   chronological.forEach(h => {
     const nums = h.nums;
+    // Para el estado global (vírgenes, pendientes y frecuencia), la séptima
+    // bola también cuenta como un número que ya salió. No se asigna a una de
+    // las seis posiciones principales, por lo que no afecta sus aciertos.
+    const appearedNums = h.adicional !== null && h.adicional !== undefined
+      ? [...nums, h.adicional]
+      : nums;
     // Intruso posicional: el numero salio en la posicion i pero no pertenece al rango de ESA posicion
     // (aunque pertenezca al rango de otra posicion)
     const posFlags = nums.map((n,i) => POS_TABLE[i].includes(n)); // true = acierto posicional
     const intrusosPos = nums.filter((n,i) => !POS_TABLE[i].includes(n));
     const hits = posFlags.filter(Boolean).length;
     const breaks = nums.filter(n => !everAppeared.has(n) && UNIVERSE_TABLE.includes(n));
+    appearedNums.forEach(n => everAppeared.add(n));
     nums.forEach((n,i) => {
-      everAppeared.add(n);
       if (POS_TABLE[i].includes(n)) exactByPos[i].add(n);
     });
     rows.push({ id: h.id, nums, posFlags, intrusosPos, hits, breaks });
@@ -4838,7 +4844,12 @@ function renderCapas() {
   // Frecuencia en los ultimos 25 sorteos (ventana aparte de CAPAS_VENTANA), para marcar calientes/frios
   const ultimos25 = HISTORY.slice().sort((a,b)=>b.id-a.id).slice(0,25);
   const freq25 = {};
-  ultimos25.forEach(h => h.nums.forEach(n => { freq25[n] = (freq25[n]||0)+1; }));
+  ultimos25.forEach(h => {
+    const appearedNums = h.adicional !== null && h.adicional !== undefined
+      ? [...h.nums, h.adicional]
+      : h.nums;
+    appearedNums.forEach(n => { freq25[n] = (freq25[n]||0)+1; });
+  });
   const emojiPara = (n) => {
     const f = freq25[n] || 0;
     if (f >= 5) return '🔥';
