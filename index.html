@@ -4746,7 +4746,7 @@ function renderCapas() {
         const isPending = pendientes[i].includes(n);
         const isVirgin = !everAppeared.has(n);
         const cls = isExact ? ' hit' : (isPending ? ' pending' : (isVirgin ? ' alive' : ''));
-        const emoji = (isPending || isVirgin) ? emojiPara(n) : '';
+        const emoji = (isExact || isPending || isVirgin) ? emojiPara(n) : '';
         return `<span class="num-chip-wrap"><span class="num-chip-emoji">${emoji}</span><span class="num-chip${cls}">${n}</span></span>`;
       }).join('');
       return `<div class="pos-panel"><div class="pos-panel-title">Posición ${i+1}</div>${chips}</div>`;
