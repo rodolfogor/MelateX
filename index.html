@@ -1815,6 +1815,39 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
     <!-- TAB: ANÁLISIS -->
     <div class="tab-content" id="content-analisis">
 
+      <!-- Integración 5/5: laboratorio local, independiente del asistente principal -->
+      <div class="section-title" style="margin-bottom:8px;">Integración 5/5 <span style="font-size:10px;color:var(--gold);font-weight:500;letter-spacing:0;text-transform:none;">· laboratorio local</span></div>
+      <p style="font-size:11px;color:var(--text3);margin:0 0 12px;line-height:1.6;">
+        Combina los sorteos generales recientes con los del lote del próximo concurso. Es una exploración estadística: no garantiza resultados futuros.
+      </p>
+      <div class="analysis-card" style="margin-bottom:20px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px;">
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Ventana general
+            <input id="i55General" type="number" min="3" max="50" value="5" onchange="setIntegration55('general', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Ventana por lote
+            <input id="i55Lot" type="number" min="3" max="50" value="6" onchange="setIntegration55('lot', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Peso general
+            <input id="i55GeneralWeight" type="number" min="0" max="100" value="45" onchange="setIntegration55('generalWeight', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Peso lote
+            <input id="i55LotWeight" type="number" min="0" max="100" value="55" onchange="setIntegration55('lotWeight', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+          </label>
+        </div>
+        <div id="integration55Panel"></div>
+        <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:7px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--text2);">Validación histórica sin fuga de datos</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:3px;">Cada ranking se crea solo con sorteos anteriores al resultado que se evalúa.</div>
+            </div>
+            <button onclick="runIntegration55Backtest()" style="cursor:pointer;background:var(--gold);border:0;border-radius:6px;padding:7px 10px;color:#111;font-size:11px;font-weight:700;">Evaluar configuración</button>
+          </div>
+          <div id="integration55Backtest" style="font-size:11px;color:var(--text3);">Usa las ventanas y pesos seleccionados arriba.</div>
+        </div>
+      </div>
+
       <!-- ── SECTION 1: Direccionalidad con flechas ────────────────── -->
       <div class="section-title" style="margin-bottom:12px;">📐 Direccionalidad por Posición</div>
       <p style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6;">
@@ -4928,6 +4961,7 @@ function clearLotHighlight() {
 // ============================================================
 
 function renderAnalysis() {
+  renderIntegration55();
   // Position probability grid
   const grid = document.getElementById('posProbGrid');
   grid.innerHTML = '';
@@ -6119,10 +6153,178 @@ function renderDeltaValidation() {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// ============================================================
+// INTEGRACIÓN 5/5 — laboratorio de ventanas configurables
+// La predicción se condiciona al lote del siguiente concurso. Cada señal
+// es una frecuencia normalizada para que ventanas de tamaños distintos se
+// puedan combinar sin favorecer automáticamente a la más grande.
+// ============================================================
+const INTEGRATION_55 = { general: 5, lot: 6, generalWeight: 45, lotWeight: 55 };
+const LOT_META = {
+  1: { name: 'Verde', terminals: '0 y 5', color: '#00C853' },
+  2: { name: 'Rojo', terminals: '1 y 6', color: '#E8001D' },
+  3: { name: 'Amarillo', terminals: '2 y 7', color: '#FFB800' },
+  4: { name: 'Azul', terminals: '3 y 8', color: '#4AC8FF' },
+  5: { name: 'Morado', terminals: '4 y 9', color: '#9F7AFF' }
+};
+
+function clampIntegration55(value) {
+  return Math.min(50, Math.max(3, Number.parseInt(value, 10) || 3));
+}
+
+function integration55Frequency(draws) {
+  const freq = Array(40).fill(0);
+  let ballCount = 0;
+  draws.forEach(draw => {
+    // Cada señal incorpora las 6 bolas principales y la bola adicional.
+    [...draw.nums, draw.adicional].forEach(n => {
+      if (n >= 1 && n <= 39) {
+        freq[n]++;
+        ballCount++;
+      }
+    });
+  });
+  const denominator = Math.max(1, ballCount);
+  return freq.map(count => count / denominator);
+}
+
+function getIntegration55Model() {
+  if (!HISTORY.length) return null;
+  const nextId = HISTORY[0].id + 1;
+  const lotId = getLot(nextId);
+  const generalDraws = HISTORY.slice(0, INTEGRATION_55.general);
+  const lotDraws = HISTORY.filter(draw => getLot(draw.id) === lotId).slice(0, INTEGRATION_55.lot);
+  const general = integration55Frequency(generalDraws);
+  const lot = integration55Frequency(lotDraws);
+  const totalWeight = Math.max(1, INTEGRATION_55.generalWeight + INTEGRATION_55.lotWeight);
+  const wGeneral = INTEGRATION_55.generalWeight / totalWeight;
+  const wLot = INTEGRATION_55.lotWeight / totalWeight;
+  const scores = Array.from({ length: 39 }, (_, index) => {
+    const num = index + 1;
+    return { num, general: general[num], lot: lot[num], score: wGeneral * general[num] + wLot * lot[num] };
+  }).sort((a, b) => b.score - a.score || b.lot - a.lot || b.general - a.general || a.num - b.num);
+  return { nextId, lotId, generalDraws, lotDraws, wGeneral, wLot, scores };
+}
+
+function setIntegration55(field, value) {
+  if (field === 'general' || field === 'lot') {
+    INTEGRATION_55[field] = clampIntegration55(value);
+  } else {
+    INTEGRATION_55[field] = Math.min(100, Math.max(0, Number(value) || 0));
+  }
+  renderIntegration55();
+  const backtest = document.getElementById('integration55Backtest');
+  if (backtest) backtest.textContent = 'Configuración modificada. Vuelve a evaluarla para actualizar la validación histórica.';
+}
+
+function renderIntegration55() {
+  const panel = document.getElementById('integration55Panel');
+  if (!panel) return;
+  const model = getIntegration55Model();
+  if (!model) {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--text3);">Carga resultados históricos para calcular la integración.</div>';
+    return;
+  }
+  const meta = LOT_META[model.lotId];
+  const maxScore = model.scores[0]?.score || 1;
+  const topSix = model.scores.slice(0, 6);
+  const topTwelve = model.scores.slice(0, 12);
+  const chip = (entry, index) => {
+    const pct = Math.round((entry.score / maxScore) * 100);
+    const bg = index < 6 ? `${meta.color}22` : 'var(--bg4)';
+    const border = index < 6 ? meta.color : 'var(--border)';
+    return `<button onclick="toggleNum(${entry.num})" title="General: ${(entry.general * 100).toFixed(1)}% · Lote: ${(entry.lot * 100).toFixed(1)}%" style="cursor:pointer;background:${bg};border:1px solid ${border};border-radius:7px;padding:6px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;min-width:46px;">
+      <strong style="font-size:14px;">${entry.num}</strong><br><span style="font-size:9px;color:var(--text3);">${pct}%</span>
+    </button>`;
+  };
+  panel.innerHTML = `
+    <div style="font-size:11px;line-height:1.65;color:var(--text2);margin-bottom:10px;">
+      Próximo concurso estimado: <strong>#${model.nextId}</strong> · lote <strong style="color:${meta.color};">${meta.name}</strong> (terminación ${meta.terminals}).<br>
+      Señales usadas: ${model.generalDraws.length} sorteos generales y ${model.lotDraws.length} del lote · 7 bolas por sorteo (6 principales + adicional) · pesos normalizados: general ${(model.wGeneral * 100).toFixed(0)}% / lote ${(model.wLot * 100).toFixed(0)}%.
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Combinación exploratoria (top 6)</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${topSix.map(chip).join('')}</div>
+    <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Ranking de señal conjunta · toca un número para añadirlo al boleto</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">${topTwelve.map(chip).join('')}</div>
+  `;
+}
+
+function rankIntegration55(generalDraws, lotDraws) {
+  const general = integration55Frequency(generalDraws);
+  const lot = integration55Frequency(lotDraws);
+  const totalWeight = Math.max(1, INTEGRATION_55.generalWeight + INTEGRATION_55.lotWeight);
+  const wGeneral = INTEGRATION_55.generalWeight / totalWeight;
+  const wLot = INTEGRATION_55.lotWeight / totalWeight;
+  return Array.from({ length: 39 }, (_, index) => {
+    const num = index + 1;
+    return { num, score: wGeneral * general[num] + wLot * lot[num] };
+  }).sort((a, b) => b.score - a.score || a.num - b.num);
+}
+
+function runIntegration55Backtest() {
+  const output = document.getElementById('integration55Backtest');
+  if (!output) return;
+  const chronological = HISTORY.slice().sort((a, b) => a.id - b.id);
+  const minPrior = Math.max(INTEGRATION_55.general, INTEGRATION_55.lot * 5);
+  let evaluated = 0;
+  let top6Hits = 0;
+  let top12Hits = 0;
+  let rankTotal = 0;
+  let evaluatedBalls = 0;
+
+  // El sorteo objetivo nunca se incluye en `prior`: evita mirar el futuro.
+  for (let index = minPrior; index < chronological.length; index++) {
+    const prior = chronological.slice(0, index);
+    const target = chronological[index];
+    const generalDraws = prior.slice(-INTEGRATION_55.general);
+    const lotDraws = prior.filter(draw => getLot(draw.id) === getLot(target.id)).slice(-INTEGRATION_55.lot);
+    if (generalDraws.length < INTEGRATION_55.general || lotDraws.length < INTEGRATION_55.lot) continue;
+
+    const ranking = rankIntegration55(generalDraws, lotDraws);
+    const positions = new Map(ranking.map((entry, position) => [entry.num, position + 1]));
+    const winningBalls = [...target.nums, target.adicional].filter(n => n >= 1 && n <= 39);
+    if (!winningBalls.length) continue;
+
+    evaluated++;
+    winningBalls.forEach(num => {
+      const position = positions.get(num) || 39;
+      evaluatedBalls++;
+      rankTotal += position;
+      if (position <= 6) top6Hits++;
+      if (position <= 12) top12Hits++;
+    });
+  }
+
+  if (!evaluatedBalls) {
+    output.innerHTML = '<span style="color:var(--gold);">No hay historial suficiente para esta combinación de ventanas.</span>';
+    return;
+  }
+  const hit6PerDraw = top6Hits / evaluated;
+  const hit12PerDraw = top12Hits / evaluated;
+  const avgRank = rankTotal / evaluatedBalls;
+  const ballsPerDraw = evaluatedBalls / evaluated;
+  const random6 = ballsPerDraw * 6 / 39;
+  const random12 = ballsPerDraw * 12 / 39;
+  const edge6 = hit6PerDraw - random6;
+  const edgeColor = edge6 > 0 ? 'var(--green)' : edge6 < 0 ? 'var(--red)' : 'var(--text3)';
+  output.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:7px;margin-top:10px;">
+      <div style="background:var(--bg4);padding:8px;border-radius:6px;"><span style="display:block;font-size:9px;color:var(--text3);">SORTEOS EVALUADOS</span><strong>${evaluated}</strong></div>
+      <div style="background:var(--bg4);padding:8px;border-radius:6px;"><span style="display:block;font-size:9px;color:var(--text3);">TOP 6</span><strong>${hit6PerDraw.toFixed(2)}</strong><span style="font-size:9px;color:var(--text3);"> / sorteo</span></div>
+      <div style="background:var(--bg4);padding:8px;border-radius:6px;"><span style="display:block;font-size:9px;color:var(--text3);">TOP 12</span><strong>${hit12PerDraw.toFixed(2)}</strong><span style="font-size:9px;color:var(--text3);"> / sorteo</span></div>
+      <div style="background:var(--bg4);padding:8px;border-radius:6px;"><span style="display:block;font-size:9px;color:var(--text3);">RANGO MEDIO</span><strong>${avgRank.toFixed(1)}</strong><span style="font-size:9px;color:var(--text3);"> / 39</span></div>
+    </div>
+    <div style="margin-top:9px;line-height:1.55;color:var(--text3);">
+      Referencia aleatoria: <strong>${random6.toFixed(2)}</strong> bolas por sorteo en Top 6 y <strong>${random12.toFixed(2)}</strong> en Top 12. Diferencia Top 6: <strong style="color:${edgeColor};">${edge6 >= 0 ? '+' : ''}${edge6.toFixed(2)}</strong>.<br>
+      Evalúa 6 principales + adicional. Una ventaja pequeña o inconsistente puede ser ruido; compárala con otras ventanas y pesos antes de elegir una configuración.
+    </div>`;
+}
+
 // PATCH renderAnalysis to call new renderers
 // ════════════════════════════════════════════════════════════════════
 
 function renderAnalysis() {
+  renderIntegration55();
   // Position probability grid (legacy — kept for directionality context)
   // Removed from view but still computed
   const grid = document.getElementById('posProbGrid');
