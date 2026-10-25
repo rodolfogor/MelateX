@@ -18,7 +18,9 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          # Python 3.9 no tiene binario disponible en los runners Ubuntu 26.04
+          # que puede resolver `ubuntu-latest`. El scraper es compatible con 3.12.
+          python-version: '3.12'
 
       - name: Instalar librerías
         run: pip install requests
