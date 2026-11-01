@@ -687,6 +687,25 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
+.integration55-suggestion {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px;
+  transition: border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+.integration55-suggestion.is-lit {
+  border-color: var(--gold);
+  background: rgba(255,184,0,.07);
+  box-shadow: 0 0 18px rgba(255,184,0,.28), inset 0 0 14px rgba(255,184,0,.05);
+  animation: integration55-glow 1.6s ease-in-out infinite alternate;
+}
+.integration55-history-hit { margin-top: 7px; font-size: 10px; color: var(--text3); }
+.integration55-suggestion.is-lit .integration55-history-hit { color: var(--gold); }
+@keyframes integration55-glow {
+  from { box-shadow: 0 0 10px rgba(255,184,0,.20), inset 0 0 10px rgba(255,184,0,.04); }
+  to { box-shadow: 0 0 24px rgba(255,184,0,.45), inset 0 0 16px rgba(255,184,0,.10); }
+}
+
 .analysis-card-title {
   font-size: 11px;
   font-weight: 600;
@@ -1823,10 +1842,10 @@ tr.lote-dimmed td { opacity: 0.22; transition: opacity 0.25s; }
       <div class="analysis-card" style="margin-bottom:20px;">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px;">
           <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Ventana general
-            <input id="i55General" type="number" min="3" max="50" value="5" onchange="setIntegration55('general', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+            <input id="i55General" type="number" min="3" max="50" value="5" oninput="setIntegration55('general', this.value)" onchange="setIntegration55('general', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
           </label>
           <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Ventana por lote
-            <input id="i55Lot" type="number" min="3" max="50" value="6" onchange="setIntegration55('lot', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
+            <input id="i55Lot" type="number" min="3" max="50" value="6" oninput="setIntegration55('lot', this.value)" onchange="setIntegration55('lot', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
           </label>
           <label style="display:flex;flex-direction:column;gap:5px;font-size:10px;color:var(--text3);">Peso general
             <input id="i55GeneralWeight" type="number" min="0" max="100" value="45" onchange="setIntegration55('generalWeight', this.value)" style="width:72px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:6px;color:var(--text);">
@@ -6206,6 +6225,20 @@ function getIntegration55Model() {
   return { nextId, lotId, generalDraws, lotDraws, wGeneral, wLot, scores };
 }
 
+// Compara sólo contra los sorteos incluidos en las ventanas activas.
+function getIntegration55HistoricalMatch(suggestedNums, draws) {
+  let bestHits = 0;
+  let bestDrawId = null;
+  draws.forEach(draw => {
+    const hits = suggestedNums.filter(num => draw.nums.includes(num)).length;
+    if (hits > bestHits) {
+      bestHits = hits;
+      bestDrawId = draw.id;
+    }
+  });
+  return { hits: bestHits, drawId: bestDrawId, isLit: bestHits > 4 };
+}
+
 function setIntegration55(field, value) {
   if (field === 'general' || field === 'lot') {
     INTEGRATION_55[field] = clampIntegration55(value);
@@ -6215,6 +6248,11 @@ function setIntegration55(field, value) {
   renderIntegration55();
   const backtest = document.getElementById('integration55Backtest');
   if (backtest) backtest.textContent = 'Configuración modificada. Vuelve a evaluarla para actualizar la validación histórica.';
+}
+
+function toggleIntegration55Num(num) {
+  toggleNum(num);
+  renderIntegration55();
 }
 
 function renderIntegration55() {
@@ -6229,11 +6267,15 @@ function renderIntegration55() {
   const maxScore = model.scores[0]?.score || 1;
   const topSix = model.scores.slice(0, 6);
   const topTwelve = model.scores.slice(0, 12);
+  const windowDraws = [...new Map([...model.generalDraws, ...model.lotDraws].map(draw => [draw.id, draw])).values()];
+  const exploratoryMatch = getIntegration55HistoricalMatch(topSix.map(entry => entry.num), windowDraws);
+  const rankingMatch = getIntegration55HistoricalMatch(topTwelve.map(entry => entry.num), windowDraws);
   const chip = (entry, index) => {
     const pct = Math.round((entry.score / maxScore) * 100);
-    const bg = index < 6 ? `${meta.color}22` : 'var(--bg4)';
-    const border = index < 6 ? meta.color : 'var(--border)';
-    return `<button onclick="toggleNum(${entry.num})" title="General: ${(entry.general * 100).toFixed(1)}% · Lote: ${(entry.lot * 100).toFixed(1)}%" style="cursor:pointer;background:${bg};border:1px solid ${border};border-radius:7px;padding:6px 8px;color:var(--text);font-family:'JetBrains Mono',monospace;min-width:46px;">
+    const selected = currentSelection.includes(entry.num);
+    const bg = selected ? 'rgba(0,0,0,.62)' : (index < 6 ? `${meta.color}22` : 'var(--bg4)');
+    const border = selected ? 'var(--gold)' : (index < 6 ? meta.color : 'var(--border)');
+    return `<button onclick="toggleIntegration55Num(${entry.num})" aria-pressed="${selected}" title="General: ${(entry.general * 100).toFixed(1)}% · Lote: ${(entry.lot * 100).toFixed(1)}%${selected ? ' · En boleto' : ''}" style="cursor:pointer;background:${bg};border:1px solid ${border};border-radius:7px;padding:6px 8px;color:${selected ? 'var(--gold)' : 'var(--text)'};font-family:'JetBrains Mono',monospace;min-width:46px;box-shadow:${selected ? 'inset 0 0 0 1px rgba(255,184,0,.3)' : 'none'};">
       <strong style="font-size:14px;">${entry.num}</strong><br><span style="font-size:9px;color:var(--text3);">${pct}%</span>
     </button>`;
   };
@@ -6242,10 +6284,16 @@ function renderIntegration55() {
       Próximo concurso estimado: <strong>#${model.nextId}</strong> · lote <strong style="color:${meta.color};">${meta.name}</strong> (terminación ${meta.terminals}).<br>
       Señales usadas: ${model.generalDraws.length} sorteos generales y ${model.lotDraws.length} del lote · 7 bolas por sorteo (6 principales + adicional) · pesos normalizados: general ${(model.wGeneral * 100).toFixed(0)}% / lote ${(model.wLot * 100).toFixed(0)}%.
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Combinación exploratoria (top 6)</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">${topSix.map(chip).join('')}</div>
-    <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Ranking de señal conjunta · toca un número para añadirlo al boleto</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;">${topTwelve.map(chip).join('')}</div>
+    <div class="integration55-suggestion${exploratoryMatch.isLit ? ' is-lit' : ''}" style="margin-bottom:10px;">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Combinación exploratoria (top 6)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${topSix.map(chip).join('')}</div>
+      <div class="integration55-history-hit">${exploratoryMatch.isLit ? `✦ Encendida: ${exploratoryMatch.hits} aciertos dentro de las ventanas activas, en el sorteo #${exploratoryMatch.drawId}.` : `Mejor coincidencia en las ventanas activas: ${exploratoryMatch.hits}/6${exploratoryMatch.drawId ? ` (sorteo #${exploratoryMatch.drawId})` : ''}.`}</div>
+    </div>
+    <div class="integration55-suggestion${rankingMatch.isLit ? ' is-lit' : ''}">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px;">Ranking de señal conjunta · toca un número para añadirlo al boleto</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${topTwelve.map(chip).join('')}</div>
+      <div class="integration55-history-hit">${rankingMatch.isLit ? `✦ Encendida: ${rankingMatch.hits} aciertos dentro de las ventanas activas, en el sorteo #${rankingMatch.drawId}.` : `Mejor coincidencia en las ventanas activas: ${rankingMatch.hits}/6${rankingMatch.drawId ? ` (sorteo #${rankingMatch.drawId})` : ''}.`}</div>
+    </div>
   `;
 }
 
